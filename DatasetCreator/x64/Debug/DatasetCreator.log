@@ -1,0 +1,16 @@
+﻿  creator.cpp
+C:\Users\tanuz\Desktop\SCRIPT\MTA-Mod\DatasetCreator\creator.h(185,19): warning C4244: 'return': conversione da 'double' a 'float'. Possibile perdita di dati.
+C:\Users\tanuz\Desktop\SCRIPT\MTA-Mod\DatasetCreator\creator.h(189,19): warning C4244: 'return': conversione da 'double' a 'float'. Possibile perdita di dati.
+C:\Users\tanuz\Desktop\SCRIPT\MTA-Mod\DatasetCreator\creator.h(827,27): warning C4244: 'inizializzazione': conversione da 'double' a 'float'. Possibile perdita di dati.
+C:\Users\tanuz\Desktop\SCRIPT\MTA-Mod\DatasetCreator\creator.h(903,27): warning C4244: 'inizializzazione': conversione da 'double' a 'float'. Possibile perdita di dati.
+C:\Users\tanuz\Desktop\SCRIPT\MTA-Mod\DatasetCreator\creator.h(950,18): warning C4244: 'inizializzazione': conversione da 'double' a 'float'. Possibile perdita di dati.
+C:\Users\tanuz\Desktop\SCRIPT\MTA-Mod\DatasetCreator\creator.h(994,27): warning C4244: 'inizializzazione': conversione da 'double' a 'float'. Possibile perdita di dati.
+  The contents of <filesystem> are available only with C++17 or later.
+C:\Users\tanuz\Desktop\SCRIPT\MTA-Mod\DatasetCreator\creator.cpp(2155,16): warning C4244: 'inizializzazione': conversione da 'double' a 'float'. Possibile perdita di dati.
+C:\Users\tanuz\Desktop\SCRIPT\MTA-Mod\DatasetCreator\creator.cpp(2473,16): warning C4244: 'inizializzazione': conversione da 'double' a 'float'. Possibile perdita di dati.
+C:\Users\tanuz\Desktop\SCRIPT\MTA-Mod\DatasetCreator\creator.cpp(2496,16): warning C4244: 'inizializzazione': conversione da 'double' a 'float'. Possibile perdita di dati.
+C:\Users\tanuz\Desktop\SCRIPT\MTA-Mod\DatasetCreator\creator.cpp(3074,45): warning C4267: '=': conversione da 'size_t' a 'int'. Possibile perdita di dati.
+C:\Users\tanuz\Desktop\SCRIPT\MTA-Mod\DatasetCreator\creator.cpp(4315,14): warning C4244: 'inizializzazione': conversione da 'double' a 'float'. Possibile perdita di dati.
+  DatasetCreator.vcxproj -> C:\Users\tanuz\Desktop\SCRIPT\MTA-Mod\x64\Debug\DatasetCreator.asi
+  C:\Users\tanuz\Desktop\SCRIPT\MTA-Mod\x64\Debug\DatasetCreator.asi
+  1 File copiati
