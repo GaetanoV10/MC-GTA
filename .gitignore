@@ -30,3 +30,17 @@
 *.exe
 *.out
 *.app
+*.db
+.vs/GT5_Vehicle_BB/v17/.suo
+.vs/MTA-Mod/v17/.suo
+*.db-shm
+*.db-wal
+*.opendb
+*.ipch
+*.vcxproj
+*.recipe
+*.log
+DatasetCreator/x64/Debug/DatasetCreator.log
+DatasetCreator/x64/Debug/DatasetCreator.tlog/CL.command.1.tlog
+*.idb
+*.tlog

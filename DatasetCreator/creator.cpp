@@ -43,6 +43,7 @@ static char scenarioTypes[14][40]{
 };
 
 typedef std::pair<Vehicle, float> pair;
+std::vector<std::vector<std::string>> jointVehicleInfos;
 
 
 
@@ -922,14 +923,12 @@ void Creator::appendCSVLinesToFile(std::shared_ptr<std::ofstream> file, std::vec
 
 		}
 
-		*file << line;
+		(*file) << line;
 	}
 
 
 
 }
-
-
 
 void Creator::loadPedAppearanceSet() {
 
@@ -1396,14 +1395,29 @@ void Creator::drawVehicle2dBoxViaJoints() {
 		return;
 	}
 
-	this->cam_coords = CAM::GET_GAMEPLAY_CAM_COORD();
+	setCamera(CAM::GET_GAMEPLAY_CAM_COORD(), CAM::GET_GAMEPLAY_CAM_ROT(2));
 
-	const int maxWorldVehicles = 2000;
+	int frameCount = GAMEPLAY::GET_FRAME_COUNT();
+
+
+	std::string camFolder = "cam\\";
+	std::string camFolderPath = this->output_path + camFolder;
+	std::string imageName = "image_" + std::to_string(frameCount);
+	_mkdir(camFolderPath.c_str());
+
+	std::string pathImage = camFolderPath + imageName + ".jpg";
+
+	std::string coordsCamPath = camFolderPath + "info_vehicles_1.csv";
+
+	std::shared_ptr<std::ofstream> coordsCamFile = std::make_shared<std::ofstream>(coordsCamPath);
+
+	(*coordsCamFile) << "frame_#,vehicle_id,x_min,x_max,y_min,y_max,confidence \n";
+
+	const int maxWorldVehicles = 500;
 	int allVehicles[maxWorldVehicles];
 	int foundWorldVehicles = worldGetAllVehicles(allVehicles, maxWorldVehicles);
 
-	
-
+	boolean vehicleIsPresent = false;
 	for (int i = 0; i < foundWorldVehicles; i++) {
 		int numJointsFound = 0;
 
@@ -1416,8 +1430,9 @@ void Creator::drawVehicle2dBoxViaJoints() {
 			allVehicles[i], 17) || !ENTITY::IS_ENTITY_VISIBLE(allVehicles[i]) || !VEHICLE::_IS_VEHICLE_ENGINE_ON(allVehicles[i]) 
 			|| vehicle2cam_distance > MAX_PED_TO_CAM_DISTANCE) {
 			if(!VEHICLE::_IS_VEHICLE_ENGINE_ON(allVehicles[i]))
-				log_file << "veicolo spento\n";
-			//log_file << "veicolo non inquadrato o occluso o spento\n";
+				log_file << "veicolo spento\n"; 
+			else
+				log_file << "veicolo non inquadrato o occluso o spento\n";
 			continue;
 		}
 
@@ -1436,6 +1451,8 @@ void Creator::drawVehicle2dBoxViaJoints() {
 		occludedBox.y_min = (float)SCREEN_HEIGHT;
 
 		
+		float x_joint, y_joint;
+
 		for (JointPosition jointPos : jointPositions) {
 
 			// if joint does not exist in that specific vehicle --> not consider it in the BB
@@ -1445,7 +1462,6 @@ void Creator::drawVehicle2dBoxViaJoints() {
 					this->cam_rot = CAM::GET_GAMEPLAY_CAM_ROT(2);
 				}
 
-				float x_joint, y_joint;
 				get_2D_from_3D(jointPos.position, &x_joint, &y_joint);
 				/*log_file << allVehicles[i] << " = " << jointPos.position.x << ", " << jointPos.position.y << ", " << jointPos.position.z << "---- 2D ----"
 					<< x_joint << ", " << y_joint << std::endl << std::endl;*/
@@ -1472,8 +1488,17 @@ void Creator::drawVehicle2dBoxViaJoints() {
 		}
 
 		if (numJointsFound >= 1) {
+			vehicleIsPresent = true;
 			BoundingBox paddedBox = getPaddedBoundingBox(occludedBox, nonOccludedBox);
-
+			std::vector<std::string> vehicleInfoEntry;
+			vehicleInfoEntry.push_back(std::to_string(frameCount));
+			vehicleInfoEntry.push_back(std::to_string(allVehicles[i])); // vehicle ID
+			vehicleInfoEntry.push_back(std::to_string(paddedBox.x_min));
+			vehicleInfoEntry.push_back(std::to_string(paddedBox.x_max));
+			vehicleInfoEntry.push_back(std::to_string(paddedBox.y_min));
+			vehicleInfoEntry.push_back(std::to_string(paddedBox.y_max));
+			vehicleInfoEntry.push_back("1");
+			jointVehicleInfos.push_back(vehicleInfoEntry);
 			Helper::drawBox2D(
 				(int)paddedBox.x_min
 				, (int)paddedBox.y_min
@@ -1481,6 +1506,9 @@ void Creator::drawVehicle2dBoxViaJoints() {
 				, (int)paddedBox.y_max, 2.0f);
 		}
 	}
+	appendCSVLinesToFile(coordsCamFile, jointVehicleInfos);
+	if(vehicleIsPresent)
+		saveScreenImage(pathImage);
 }
 
 std::vector<JointPosition> Creator::getPedJointPoints(Ped ped) {
