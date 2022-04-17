@@ -1877,6 +1877,8 @@ private:
 	void drawPedBox3D();
 	std::vector<JointPosition> getPedJointPoints(Ped ped);
 	std::vector<JointPosition> getVehicleJointPoints(Vehicle vehicle);
+	std::vector<Vector3> getEdgesVehicle(Vehicle vehicle);
+	std::vector<std::string> logVehicleBoundingBox(int frameCount, Vehicle vehicle, BoundingBox boundingBox);
 	void drawVehicle2dBoxViaJoints();
 	void saveCameraSettings();
 	void deleteCurrentCameraSetting();

@@ -156,7 +156,7 @@ std::vector<const char*> vehicle_bones = {
 	"gear_rr",
 	"gear_rm",
 	"light_cover",
-	};
+};
 
 void update_status_text()
 {
@@ -1397,7 +1397,7 @@ void Creator::drawVehicle2dBoxViaJoints() {
 
 	ENTITY::SET_ENTITY_VISIBLE(PLAYER::GET_PLAYER_PED(-1), false, 0);
 
-	// SETUP camera based on gameplay cam, SET time at 12 o'clock, SET weather = EXTRASUNNY (TODO check other weathers)
+	// SETUP camera based on gameplay cam, SET time at 12 o'clock, SET weather = FOGGY (TODO check other weathers)
 	setCamera(CAM::GET_GAMEPLAY_CAM_COORD(), CAM::GET_GAMEPLAY_CAM_ROT(2));
 
 	TIME::SET_CLOCK_TIME(12, 0, 0);
@@ -1421,11 +1421,11 @@ void Creator::drawVehicle2dBoxViaJoints() {
 	std::shared_ptr<std::ofstream> coordsCamFile = std::make_shared<std::ofstream>(coordsCamPath);
 	(*coordsCamFile) << "frame_#,vehicle_id,x_min,x_max,y_min,y_max,confidence \n";
 
-	const int maxWorldVehicles = 500;
+	const int maxWorldVehicles = 1000;
 	int allVehicles[maxWorldVehicles];
 	int foundWorldVehicles = worldGetAllVehicles(allVehicles, maxWorldVehicles);
 
-	// bool to save image only when a vehicle is detected
+	// bool to save image if vehicle are present in the frame 
 	boolean vehicleIsPresent = false;
 	for (int i = 0; i < foundWorldVehicles; i++) {
 		int numJointsFound = 0;
@@ -1436,88 +1436,131 @@ void Creator::drawVehicle2dBoxViaJoints() {
 			vehicle_coords.x, vehicle_coords.y, vehicle_coords.z, 1
 		);
 		if (!ENTITY::IS_ENTITY_ON_SCREEN(allVehicles[i]) || !ENTITY::HAS_ENTITY_CLEAR_LOS_TO_ENTITY(PLAYER::GET_PLAYER_PED(-1),
-			allVehicles[i], 17) || !ENTITY::IS_ENTITY_VISIBLE(allVehicles[i]) || !VEHICLE::_IS_VEHICLE_ENGINE_ON(allVehicles[i]) 
+			allVehicles[i], 17) || !ENTITY::IS_ENTITY_VISIBLE(allVehicles[i]) || !VEHICLE::_IS_VEHICLE_ENGINE_ON(allVehicles[i])
 			|| vehicle2cam_distance > MAX_PED_TO_CAM_DISTANCE) {
-			if(!VEHICLE::_IS_VEHICLE_ENGINE_ON(allVehicles[i]))
-				log_file << "veicolo spento\n"; 
-			else
-				log_file << "veicolo non inquadrato o occluso o spento\n";
+
+			//log_file << "veicolo non inquadrato o occluso o spento\n";
 			continue;
 		}
 
-		std::vector<JointPosition> jointPositions = getVehicleJointPoints(allVehicles[i]);
+		vehicleIsPresent = true;
+		std::vector<Vector3> edges = getEdgesVehicle(allVehicles[i]);
+	
+		BoundingBox boundingBox;
+		boundingBox.x_max = 0;
+		boundingBox.x_min = (float)SCREEN_WIDTH;
+		boundingBox.y_max = 0;
+		boundingBox.y_min = (float)SCREEN_HEIGHT;
 
-		BoundingBox nonOccludedBox;
-		nonOccludedBox.x_max = 0;
-		nonOccludedBox.x_min = (float)SCREEN_WIDTH;
-		nonOccludedBox.y_max = 0;
-		nonOccludedBox.y_min = (float)SCREEN_HEIGHT;
+		// get the vertices of 2D bounding box from the 8 edges of 3D vehicle
+		for (Vector3 edge : edges) {
+			float x_joint, y_joint;
 
-		BoundingBox occludedBox;
-		occludedBox.x_max = 0;
-		occludedBox.x_min = (float)SCREEN_WIDTH;
-		occludedBox.y_max = 0;
-		occludedBox.y_min = (float)SCREEN_HEIGHT;
+			get_2D_from_3D(edge, &x_joint, &y_joint);
+			x_joint = x_joint * (float)SCREEN_WIDTH;
+			y_joint = y_joint * (float)SCREEN_HEIGHT;
 
-		
-		float x_joint, y_joint;
-
-		for (JointPosition jointPos : jointPositions) {
-
-			// if joint does not exist in that specific vehicle --> not consider it in the BB
-			if (jointPos.position.x != 0 || jointPos.position.y != 0 || jointPos.position.z != 0) {
-				if (showingGameplayCam) {
-					this->cam_coords = CAM::GET_GAMEPLAY_CAM_COORD();
-					this->cam_rot = CAM::GET_GAMEPLAY_CAM_ROT(2);
-				}
-
-				get_2D_from_3D(jointPos.position, &x_joint, &y_joint);
-				/*log_file << allVehicles[i] << " = " << jointPos.position.x << ", " << jointPos.position.y << ", " << jointPos.position.z << "---- 2D ----"
-					<< x_joint << ", " << y_joint << std::endl << std::endl;*/
-				x_joint = x_joint * (float)SCREEN_WIDTH;
-				y_joint = y_joint * (float)SCREEN_HEIGHT;
-
-				if (!(jointPos.occluded_object || jointPos.occluded_vehicle)) {
-					numJointsFound++;
-
-					nonOccludedBox.x_min = std::min<float>(x_joint, nonOccludedBox.x_min);
-					nonOccludedBox.x_max = std::max<float>(x_joint, nonOccludedBox.x_max);
-					nonOccludedBox.y_min = std::min<float>(y_joint, nonOccludedBox.y_min);
-					nonOccludedBox.y_max = std::max<float>(y_joint, nonOccludedBox.y_max);
-
-
-				}
-
-				occludedBox.x_min = std::min<float>(x_joint, occludedBox.x_min);
-				occludedBox.x_max = std::max<float>(x_joint, occludedBox.x_max);
-				occludedBox.y_min = std::min<float>(y_joint, occludedBox.y_min);
-				occludedBox.y_max = std::max<float>(y_joint, occludedBox.y_max);
-
-			}
+			boundingBox.x_min = std::min<float>(x_joint, boundingBox.x_min);
+			boundingBox.x_max = std::max<float>(x_joint, boundingBox.x_max);
+			boundingBox.y_min = std::min<float>(y_joint, boundingBox.y_min);
+			boundingBox.y_max = std::max<float>(y_joint, boundingBox.y_max);
 		}
 
-		if (numJointsFound >= 1) {
-			vehicleIsPresent = true;
-			BoundingBox paddedBox = getPaddedBoundingBox(occludedBox, nonOccludedBox);
-			std::vector<std::string> vehicleInfoEntry;
-			vehicleInfoEntry.push_back(std::to_string(frameCount));
-			vehicleInfoEntry.push_back(std::to_string(allVehicles[i])); // vehicle ID
-			vehicleInfoEntry.push_back(std::to_string(paddedBox.x_min));
-			vehicleInfoEntry.push_back(std::to_string(paddedBox.x_max));
-			vehicleInfoEntry.push_back(std::to_string(paddedBox.y_min));
-			vehicleInfoEntry.push_back(std::to_string(paddedBox.y_max));
-			vehicleInfoEntry.push_back("1");
-			jointVehicleInfos.push_back(vehicleInfoEntry);
-			Helper::drawBox2D(
-				(int)paddedBox.x_min
-				, (int)paddedBox.y_min
-				, (int)paddedBox.x_max
-				, (int)paddedBox.y_max, 2.0f);
-		}
+		// save bounding box info for each vehicle
+		std::vector<std::string> vehicleInfoEntry = logVehicleBoundingBox(frameCount, allVehicles[i], boundingBox);
+		jointVehicleInfos.push_back(vehicleInfoEntry);
+
+		Helper::drawBox2D(
+			(int)boundingBox.x_min
+			, (int)boundingBox.y_min
+			, (int)boundingBox.x_max
+			, (int)boundingBox.y_max, 2.0f);
 	}
 	appendCSVLinesToFile(coordsCamFile, jointVehicleInfos);
-	if(vehicleIsPresent)
+	if (vehicleIsPresent)
 		saveScreenImage(pathImage);
+}
+
+std::vector<Vector3> Creator::getEdgesVehicle(Vehicle vehicle) {
+	std::vector<Vector3> edges;
+	Vector3 FUR; //Front Upper Right
+	Vector3 BLL; //Back Lower Lelft
+	Vector3 dim; //Vehicle dimensions
+	Vector3 upVector, rightVector, forwardVector, position; //Vehicle position
+	Hash model;
+	Vector3 min;
+	Vector3 max;
+
+	ENTITY::GET_ENTITY_MATRIX(vehicle, &rightVector, &forwardVector, &upVector, &position);
+	model = ENTITY::GET_ENTITY_MODEL(vehicle);
+	GAMEPLAY::GET_MODEL_DIMENSIONS(model, &min, &max);
+
+	dim.x = 0.5 * (max.x - min.x);
+	dim.y = 0.5 * (max.y - min.y);
+	dim.z = 0.5 * (max.z - min.z);
+
+	FUR.x = position.x + dim.y * rightVector.x + dim.x * forwardVector.x + dim.z * upVector.x;
+	FUR.y = position.y + dim.y * rightVector.y + dim.x * forwardVector.y + dim.z * upVector.y;
+	FUR.z = position.z + dim.y * rightVector.z + dim.x * forwardVector.z + dim.z * upVector.z;
+
+	BLL.x = position.x - dim.y * rightVector.x - dim.x * forwardVector.x - dim.z * upVector.x;
+	BLL.y = position.y - dim.y * rightVector.y - dim.x * forwardVector.y - dim.z * upVector.y;
+	BLL.z = position.z - dim.y * rightVector.z - dim.x * forwardVector.z - dim.z * upVector.z;
+
+	Vector3 edge1 = BLL;
+	Vector3 edge2;
+	Vector3 edge3;
+	Vector3 edge4;
+	Vector3 edge5 = FUR;
+	Vector3 edge6;
+	Vector3 edge7;
+	Vector3 edge8;
+
+	edge2.x = edge1.x + 2 * dim.y * rightVector.x;
+	edge2.y = edge1.y + 2 * dim.y * rightVector.y;
+	edge2.z = edge1.z + 2 * dim.y * rightVector.z;
+
+	edge3.x = edge2.x + 2 * dim.z * upVector.x;
+	edge3.y = edge2.y + 2 * dim.z * upVector.y;
+	edge3.z = edge2.z + 2 * dim.z * upVector.z;
+
+	edge4.x = edge1.x + 2 * dim.z * upVector.x;
+	edge4.y = edge1.y + 2 * dim.z * upVector.y;
+	edge4.z = edge1.z + 2 * dim.z * upVector.z;
+
+	edge6.x = edge5.x - 2 * dim.y * rightVector.x;
+	edge6.y = edge5.y - 2 * dim.y * rightVector.y;
+	edge6.z = edge5.z - 2 * dim.y * rightVector.z;
+
+	edge7.x = edge6.x - 2 * dim.z * upVector.x;
+	edge7.y = edge6.y - 2 * dim.z * upVector.y;
+	edge7.z = edge6.z - 2 * dim.z * upVector.z;
+
+	edge8.x = edge5.x - 2 * dim.z * upVector.x;
+	edge8.y = edge5.y - 2 * dim.z * upVector.y;
+	edge8.z = edge5.z - 2 * dim.z * upVector.z;
+	edges.push_back(edge1);
+	edges.push_back(edge2);
+	edges.push_back(edge3);
+	edges.push_back(edge4);
+	edges.push_back(edge5);
+	edges.push_back(edge6);
+	edges.push_back(edge7);
+	edges.push_back(edge8);
+
+	return edges;
+}
+
+std::vector<std::string> Creator::logVehicleBoundingBox(int frameCount, Vehicle vehicle, BoundingBox boundingBox) {
+	std::vector<std::string> vehicleInfoEntry;
+	vehicleInfoEntry.push_back(std::to_string(frameCount));
+	vehicleInfoEntry.push_back(std::to_string(vehicle)); // vehicle ID
+	vehicleInfoEntry.push_back(std::to_string(boundingBox.x_min));
+	vehicleInfoEntry.push_back(std::to_string(boundingBox.x_max));
+	vehicleInfoEntry.push_back(std::to_string(boundingBox.y_min));
+	vehicleInfoEntry.push_back(std::to_string(boundingBox.y_max));
+	vehicleInfoEntry.push_back("1");
+	return vehicleInfoEntry;
 }
 
 std::vector<JointPosition> Creator::getPedJointPoints(Ped ped) {
