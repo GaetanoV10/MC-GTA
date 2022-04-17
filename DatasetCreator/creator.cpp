@@ -1395,28 +1395,37 @@ void Creator::drawVehicle2dBoxViaJoints() {
 		return;
 	}
 
+	ENTITY::SET_ENTITY_VISIBLE(PLAYER::GET_PLAYER_PED(-1), false, 0);
+
+	// SETUP camera based on gameplay cam, SET time at 12 o'clock, SET weather = EXTRASUNNY (TODO check other weathers)
 	setCamera(CAM::GET_GAMEPLAY_CAM_COORD(), CAM::GET_GAMEPLAY_CAM_ROT(2));
 
+	TIME::SET_CLOCK_TIME(12, 0, 0);
+	GAMEPLAY::CLEAR_OVERRIDE_WEATHER();
+	char wheaterName[] = "FOGGY";
+	GAMEPLAY::SET_WEATHER_TYPE_NOW_PERSIST(wheaterName);
+	GAMEPLAY::CLEAR_WEATHER_TYPE_PERSIST();
+
+	// GET framecount to log BB infos and relative images
 	int frameCount = GAMEPLAY::GET_FRAME_COUNT();
 
-
+	// SETUP cam path and image name for each frame
 	std::string camFolder = "cam\\";
 	std::string camFolderPath = this->output_path + camFolder;
 	std::string imageName = "image_" + std::to_string(frameCount);
 	_mkdir(camFolderPath.c_str());
 
 	std::string pathImage = camFolderPath + imageName + ".jpg";
-
 	std::string coordsCamPath = camFolderPath + "info_vehicles_1.csv";
 
 	std::shared_ptr<std::ofstream> coordsCamFile = std::make_shared<std::ofstream>(coordsCamPath);
-
 	(*coordsCamFile) << "frame_#,vehicle_id,x_min,x_max,y_min,y_max,confidence \n";
 
 	const int maxWorldVehicles = 500;
 	int allVehicles[maxWorldVehicles];
 	int foundWorldVehicles = worldGetAllVehicles(allVehicles, maxWorldVehicles);
 
+	// bool to save image only when a vehicle is detected
 	boolean vehicleIsPresent = false;
 	for (int i = 0; i < foundWorldVehicles; i++) {
 		int numJointsFound = 0;
