@@ -17,7 +17,7 @@
 
 
 #define TIME_FACTOR 12.0
-#define FPS 30
+#define FPS 40
 #define DISPLAY_FLAG TRUE
 #define WANDERING_RADIUS 10.0
 #define MAX_PED_TO_CAM_DISTANCE 150.0
@@ -43,7 +43,9 @@ static char scenarioTypes[14][40]{
 };
 
 typedef std::pair<Vehicle, float> pair;
-std::vector<std::vector<std::string>> jointVehicleInfos;
+Camera camera1;
+Camera camera2;
+int activeCameraIndex = 0;
 
 
 
@@ -890,23 +892,6 @@ std::string floatToString(float val) {
 	return ss.str();
 }
 
-void Creator::setCamera(Vector3 coords, Vector3 rots) {
-
-	CAM::DESTROY_ALL_CAMS(TRUE);
-	this->camera = CAM::CREATE_CAM((char*)"DEFAULT_SCRIPTED_CAMERA", TRUE);
-	CAM::SET_CAM_COORD(this->camera, coords.x, coords.y, coords.z);
-	CAM::SET_CAM_ROT(this->camera, rots.x, rots.y, rots.z, 2);
-	CAM::SET_CAM_ACTIVE(this->camera, TRUE);
-	CAM::SET_CAM_FOV(this->camera, (float)this->fov);
-	CAM::RENDER_SCRIPT_CAMS(TRUE, FALSE, 0, TRUE, TRUE);
-
-	this->cam_coords = CAM::GET_CAM_COORD(this->camera);
-	this->cam_rot = CAM::GET_CAM_ROT(this->camera, 2);
-	this->fov = (int)CAM::GET_CAM_FOV(this->camera);
-	showingGameplayCam = false;
-}
-
-
 void Creator::appendCSVLinesToFile(std::shared_ptr<std::ofstream> file, std::vector<std::vector<std::string>> stringVector) {
 
 
@@ -1396,37 +1381,35 @@ void Creator::drawVehicle2dBoxViaJoints() {
 	}
 
 	ENTITY::SET_ENTITY_VISIBLE(PLAYER::GET_PLAYER_PED(-1), false, 0);
+	loadCameraSettings();
+	setCamera(cameraSettings[0].position, cameraSettings[0].rotation);
 
-	// SETUP camera based on gameplay cam, SET time at 12 o'clock, SET weather = FOGGY (TODO check other weathers)
-	setCamera(CAM::GET_GAMEPLAY_CAM_COORD(), CAM::GET_GAMEPLAY_CAM_ROT(2));
+	log_file << "Camera coords -> " << this->cam_coords.x << std::endl;
 
-	TIME::SET_CLOCK_TIME(12, 0, 0);
-	GAMEPLAY::CLEAR_OVERRIDE_WEATHER();
-	char wheaterName[] = "FOGGY";
-	GAMEPLAY::SET_WEATHER_TYPE_NOW_PERSIST(wheaterName);
-	GAMEPLAY::CLEAR_WEATHER_TYPE_PERSIST();
+	TIME::SET_CLOCK_TIME(16, 0, 0);
 
 	// GET framecount to log BB infos and relative images
 	int frameCount = GAMEPLAY::GET_FRAME_COUNT();
 
 	// SETUP cam path and image name for each frame
-	std::string camFolder = "cam\\";
+	std::string camFolder = "cam_\\";
 	std::string camFolderPath = this->output_path + camFolder;
 	std::string imageName = "image_" + std::to_string(frameCount);
 	_mkdir(camFolderPath.c_str());
 
 	std::string pathImage = camFolderPath + imageName + ".jpg";
-	std::string coordsCamPath = camFolderPath + "info_vehicles_1.csv";
+	std::string coordsCamPath = camFolderPath + "info_vehicles_.csv";
 
 	std::shared_ptr<std::ofstream> coordsCamFile = std::make_shared<std::ofstream>(coordsCamPath);
-	(*coordsCamFile) << "frame_#,vehicle_id,x_min,x_max,y_min,y_max,confidence \n";
+	//(*coordsCamFile) << "frame_#,vehicle_id,x_min,x_max,y_min,y_max,confidence \n";
 
-	const int maxWorldVehicles = 1000;
+	const int maxWorldVehicles = 500;
 	int allVehicles[maxWorldVehicles];
 	int foundWorldVehicles = worldGetAllVehicles(allVehicles, maxWorldVehicles);
 
 	// bool to save image if vehicle are present in the frame 
 	boolean vehicleIsPresent = false;
+	std::vector<std::vector<std::string>> jointVehicleInfos;
 	for (int i = 0; i < foundWorldVehicles; i++) {
 		int numJointsFound = 0;
 
@@ -1555,10 +1538,10 @@ std::vector<std::string> Creator::logVehicleBoundingBox(int frameCount, Vehicle 
 	std::vector<std::string> vehicleInfoEntry;
 	vehicleInfoEntry.push_back(std::to_string(frameCount));
 	vehicleInfoEntry.push_back(std::to_string(vehicle)); // vehicle ID
-	vehicleInfoEntry.push_back(std::to_string(boundingBox.x_min));
-	vehicleInfoEntry.push_back(std::to_string(boundingBox.x_max));
-	vehicleInfoEntry.push_back(std::to_string(boundingBox.y_min));
-	vehicleInfoEntry.push_back(std::to_string(boundingBox.y_max));
+	vehicleInfoEntry.push_back(std::to_string((boundingBox.x_max - boundingBox.x_min) / 2)); // X center
+	vehicleInfoEntry.push_back(std::to_string((boundingBox.y_max - boundingBox.y_min) / 2)); // Y center
+	vehicleInfoEntry.push_back(std::to_string(boundingBox.x_max - boundingBox.x_min)); // WIDTH
+	vehicleInfoEntry.push_back(std::to_string(boundingBox.y_max - boundingBox.y_min)); // HEIGHT
 	vehicleInfoEntry.push_back("1");
 	return vehicleInfoEntry;
 }
@@ -1831,45 +1814,123 @@ void Creator::recordAllCamsOnce() {
 		CameraSetting cameraSetting = cameraSettings[camId];
 
 
-		setCamera(cameraSetting.position, cameraSetting.rotation);
-		WAIT(0); //without this line the old camera image will be recorded
-		Sleep(waitTimeAfterSetCamera); //without this line the old camera image will be recorded
-		setNativePedsInvisible();
+		//setCamera(cameraSetting.position, cameraSetting.rotation);
+		//WAIT(0); //without this line the old camera image will be recorded
+		//Sleep(waitTimeAfterSetCamera); //without this line the old camera image will be recorded
+		//setNativePedsInvisible();
 		int frameCount = GAMEPLAY::GET_FRAME_COUNT();
-		logPedestrians(imageCountPerCam, frameCount, camId, camCoordsFiles[camId]);
+		//logPedestrians(imageCountPerCam, frameCount, camId, camCoordsFiles[camId]);
 
-		logFramerate();
+		//ENTITY::SET_ENTITY_VISIBLE(PLAYER::GET_PLAYER_PED(-1), false, 0);
+
+		//log_file << "activeCameraIndex  " + std::to_string(activeCameraIndex) << std::endl;
+		//loadCameraSettings();
+		//int newIndex = (activeCameraIndex + 1);
+
+		//if (newIndex < 0) {
+		//	newIndex = (int)(cameraSettings.size() - 1);
+		//}
+		//activeCameraIndex = newIndex % cameraSettings.size();
+		//CameraSetting cameraView = cameraSettings[activeCameraIndex];
+
+		CAM::SET_CAM_ACTIVE(CAM::CREATE_CAM_WITH_PARAMS((char*)"DEFAULT_SCRIPTED_CAMERA", cameraSetting.position.x, cameraSetting.position.y,
+			cameraSetting.position.z, cameraSetting.rotation.x, cameraSetting.rotation.y, cameraSetting.rotation.z, (float)this->fov, TRUE, 2), TRUE);
+		CAM::RENDER_SCRIPT_CAMS(TRUE, FALSE, 0, TRUE, TRUE);
+		this->cam_coords = CAM::GET_CAM_COORD(CAM::GET_RENDERING_CAM());
+		this->cam_rot = CAM::GET_CAM_ROT(CAM::GET_RENDERING_CAM(), 2);
+		this->fov = (int)CAM::GET_CAM_FOV(CAM::GET_RENDERING_CAM());
+		//WAIT(0);
+		//Sleep(waitTimeAfterSetCamera);
+
+		log_file << "Camera coords -> " << this->cam_coords.x << std::endl;
+
+		//TIME::SET_CLOCK_TIME(16, 0, 0);
+
+		//// GET framecount to log BB infos and relative images
+		//int frameCount = GAMEPLAY::GET_FRAME_COUNT();
+
+		//// SETUP cam path and image name for each frame
+		//std::string camFolder = "cam_" + std::to_string(activeCameraIndex) + "\\";
+		//std::string camFolderPath = this->output_path + camFolder;
+		//std::string imageName = "image_" + std::to_string(frameCount);
+		//_mkdir(camFolderPath.c_str());
+
+		//std::string pathImage = camFolderPath + imageName + ".jpg";
+		//std::string coordsCamPath = camFolderPath + "info_vehicles_" + std::to_string(activeCameraIndex) + ".csv";
+		//log_file << "activeCameraIndex  " + std::to_string(activeCameraIndex) << std::endl << std::endl;
+
+		//std::shared_ptr<std::ofstream> coordsCamFile = std::make_shared<std::ofstream>(coordsCamPath);
+		////(*coordsCamFile) << "frame_#,vehicle_id,x_min,x_max,y_min,y_max,confidence \n";
+
 
 		std::string camFolder = "cam_" + std::to_string(camId) + "\\";
 		std::string camFolderPath = this->output_path + camFolder;
-		std::string imageName = "image_" + std::to_string(imageCountPerCam) + "_" + std::to_string(camId);
+		std::string imageName = "image_" + std::to_string(imageCountPerCam) + "_" + std::to_string(frameCount) + "_" + std::to_string(camId);
 		_mkdir(camFolderPath.c_str());
-
-		/**
-		std::string camFolderStencil = "stencil_cam_" + std::to_string(camId) + "\\";
-		std::string camFolderPathStencil = this->output_path + camFolderStencil;
-		_mkdir(camFolderPathStencil.c_str());
-		std::string pathStencil = camFolderPathStencil + imageName + ".png";
-		**/
-
 		std::string pathImage = camFolderPath + imageName + ".jpg";
 
+		const int maxWorldVehicles = 500;
+		int allVehicles[maxWorldVehicles];
+		int foundWorldVehicles = worldGetAllVehicles(allVehicles, maxWorldVehicles);
 
+		// bool to save image if vehicle are present in the frame 
+		boolean vehicleIsPresent = false;
+		std::vector<std::vector<std::string>> jointVehicleInfos;
+		for (int i = 0; i < foundWorldVehicles; i++) {
+			int numJointsFound = 0;
 
-		//Problem: People don't accept new commands very fast if game is paused ... 
-		//GAMEPLAY::SET_GAME_PAUSED(true);
-		//WAIT(waitTimeAfterSetCamera);
-		//saveBuffersAndAnnotations(pathStencil);
-		//GAMEPLAY::SET_GAME_PAUSED(false);
+			Vector3 vehicle_coords = ENTITY::GET_ENTITY_COORDS(allVehicles[i], TRUE);
+			float vehicle2cam_distance = GAMEPLAY::GET_DISTANCE_BETWEEN_COORDS(
+				cam_coords.x, cam_coords.y, cam_coords.z,
+				vehicle_coords.x, vehicle_coords.y, vehicle_coords.z, 1
+			);
+			if (!ENTITY::IS_ENTITY_ON_SCREEN(allVehicles[i]) || !ENTITY::HAS_ENTITY_CLEAR_LOS_TO_ENTITY(PLAYER::GET_PLAYER_PED(-1),
+				allVehicles[i], 17) || !ENTITY::IS_ENTITY_VISIBLE(allVehicles[i]) || !VEHICLE::_IS_VEHICLE_ENGINE_ON(allVehicles[i])
+				|| vehicle2cam_distance > MAX_PED_TO_CAM_DISTANCE) {
 
+				//log_file << "veicolo non inquadrato o occluso o spento\n";
+				continue;
+			}
 
-		saveScreenImage(pathImage);
+			vehicleIsPresent = true;
+			std::vector<Vector3> edges = getEdgesVehicle(allVehicles[i]);
 
+			BoundingBox boundingBox;
+			boundingBox.x_max = 0;
+			boundingBox.x_min = (float)SCREEN_WIDTH;
+			boundingBox.y_max = 0;
+			boundingBox.y_min = (float)SCREEN_HEIGHT;
 
+			// get the vertices of 2D bounding box from the 8 edges of 3D vehicle
+			for (Vector3 edge : edges) {
+				float x_joint, y_joint;
+
+				get_2D_from_3D(edge, &x_joint, &y_joint);
+				x_joint = x_joint * (float)SCREEN_WIDTH;
+				y_joint = y_joint * (float)SCREEN_HEIGHT;
+
+				boundingBox.x_min = std::min<float>(x_joint, boundingBox.x_min);
+				boundingBox.x_max = std::max<float>(x_joint, boundingBox.x_max);
+				boundingBox.y_min = std::min<float>(y_joint, boundingBox.y_min);
+				boundingBox.y_max = std::max<float>(y_joint, boundingBox.y_max);
+			}
+
+			// save bounding box info for each vehicle
+			std::vector<std::string> vehicleInfoEntry = logVehicleBoundingBox(frameCount, allVehicles[i], boundingBox);
+			jointVehicleInfos.push_back(vehicleInfoEntry);
+
+			Helper::drawBox2D(
+				(int)boundingBox.x_min
+				, (int)boundingBox.y_min
+				, (int)boundingBox.x_max
+				, (int)boundingBox.y_max, 2.0f);
+		}
+		appendCSVLinesToFile(camCoordsFiles[camId], jointVehicleInfos);
+		if (vehicleIsPresent)
+			saveScreenImage(pathImage);
+
+		logFramerate();
 	}
-
-
-
 	imageCountPerCam++;
 
 
@@ -1883,8 +1944,6 @@ void Creator::startWalkingScene() {
 
 void Creator::recordAtCamSettingsLoop() {
 
-	loadPedAppearanceSet();
-
 	loadCameraSettings();
 
 	for (int camId = 0; camId < cameraSettings.size(); camId++) {
@@ -1897,15 +1956,10 @@ void Creator::recordAtCamSettingsLoop() {
 
 		std::shared_ptr<std::ofstream> coordsCamFile = std::make_shared<std::ofstream>(coordsCamPath);
 
-		(*coordsCamFile) << "frame_no_gta,frame_no_cam,ped_id,spawn_id,appearance_id,joint_type,x_2D_joint,y_2D_joint,x_3D_joint,y_3D_joint,z_3D_joint,joint_occluded,joint_self_occluded,";
-		(*coordsCamFile) << "x_3D_cam,y_3D_cam,z_3D_cam,x_rot_cam,y_rot_cam,z_rot_cam,fov,x_3D_person,y_3D_person,z_3D_person,";
-		(*coordsCamFile) << "x_2D_person,y_2D_person,ped_type,wears_glasses,yaw_person,hours_gta,minutes_gta,seconds_gta,x_top_left_BB,y_top_left_BB,x_bottom_right_BB,y_bottom_right_BB\n";
 		camCoordsFiles.push_back(coordsCamFile);
 
 
 	}
-
-	pedTasksLog.open(output_path + "pedTasksLog.csv");
 	frameRateLog.open(output_path + "frameRateLog.txt");
 	imageCountPerCam = 0;
 
@@ -2060,9 +2114,6 @@ void Creator::runWalkingScenes() {
 
 }
 
-
-
-
 void Creator::viewCameraView(int increment) {
 
 	loadCameraSettings();
@@ -2087,8 +2138,6 @@ void Creator::viewCameraView(int increment) {
 
 
 }
-
-
 
 void Creator::drawCircleInXY(float radius, float x, float y, float z, int steps, int r, int g, int b, int alpha) {
 	const double pi = std::acos(-1);
@@ -2259,8 +2308,6 @@ float Creator::getTrackPosNearestRandomRadius() {
 
 }
 
-
-
 float Creator::getNodePosNearestRandomRadius() {
 
 	if (networkNodes.empty()) {
@@ -2317,8 +2364,6 @@ void Creator::saveNetworkEdges() {
 
 	networkEdgesFile.close();
 }
-
-
 
 void Creator::loadNetworkEdges() {
 
@@ -2542,7 +2587,6 @@ void Creator::runSpawnedPedActions() {
 	}
 
 }
-
 
 std::shared_ptr<PathNetworkNode> Creator::findNearestNode(Vector3 pos) {
 	std::shared_ptr<PathNetworkNode> currentNearestNode;
@@ -3310,7 +3354,6 @@ void Creator::createWallMenu()
 	}
 }
 
-
 void Creator::createScenarioMenu()
 {
 
@@ -3797,7 +3840,7 @@ void Creator::main_menu()
 				deleteCurrentCameraSetting();
 				break;
 			case 16:
-				startCombinedRecording();
+				RECORD();
 				break;
 			case 17:
 				createWallMenu();
@@ -3869,11 +3912,7 @@ void Creator::listenKeyStrokes()
 
 
 	if (IsKeyJustUp(VK_F9)) {
-
-
-
-		recordAtCamSettingsLoop();
-
+		RECORD();
 	}
 
 	if (IsKeyDown(VK_F10)) {
@@ -3895,12 +3934,6 @@ void Creator::listenKeyStrokes()
 		frameRateLog.close();
 		pedTasksLog.close();
 	}
-
-
-
-
-
-
 }
 
 void Creator::deleteCurrentCameraSetting() {
@@ -4020,7 +4053,6 @@ void Creator::rotateAndMoveWallElements() {
 	}
 
 }
-
 
 std::vector<std::vector<std::shared_ptr<PathNetworkNode>>> Creator::getAllPaths(std::shared_ptr<PathNetworkNode> start, std::shared_ptr<PathNetworkNode> end) {
 	std::vector<FindPathStackEntry> stackExpandVisited;
@@ -4808,7 +4840,6 @@ void Creator::walking_peds()
 	}
 }
 
-
 void Creator::setTimeScaleViaPerCamFPS(int fpsPerCam) {
 	loadCameraSettings();
 	int cameraCount = (int)cameraSettings.size();
@@ -4817,25 +4848,12 @@ void Creator::setTimeScaleViaPerCamFPS(int fpsPerCam) {
 	this->timeScale = (float)FPS / (float)(fpsPerCam * cameraCount);
 }
 
-
 void Creator::startCombinedRecording() {
 
 	if (!menuActive)
 		main_menu();
 	else
 		bQuit = true;
-
-	Entity e = PLAYER::PLAYER_PED_ID();
-
-
-	//"Rockford Plaza"
-	Vector3 recordingPlace;
-	recordingPlace.x = -243.421036f;
-	recordingPlace.y = -339.233917f;
-	recordingPlace.z = 30.871639f;
-	ENTITY::SET_ENTITY_COORDS_NO_OFFSET(e, recordingPlace.x, recordingPlace.y, recordingPlace.z, 0, 0, 1);
-
-	loadWallGroups();
 
 
 	TIME::SET_CLOCK_TIME(12, 0, 0);
@@ -4847,24 +4865,161 @@ void Creator::startCombinedRecording() {
 	WAIT(10000);
 
 
-
-	ENTITY::SET_ENTITY_COLLISION(PLAYER::PLAYER_PED_ID(), TRUE, TRUE);
-	ENTITY::SET_ENTITY_VISIBLE(PLAYER::PLAYER_PED_ID(), FALSE, FALSE);
-
-	startWalkingScene();
-	arePedsVisible = false;
-
-	//To spawn the peds a updateNew() call is needed then they should walk some time
-	int timeToWait = 200;
-	while (timeToWait > 0) {
-		WAIT(1);
-		updateNew();
-		timeToWait--;
-	}
-
-
 	this->currTimeScale = this->timeScale;
 	recordAtCamSettingsLoop();
 
 
+}
+
+void Creator::RECORD() {
+
+	TIME::SET_CLOCK_TIME(10, 0, 0);
+
+	setTimeScaleViaPerCamFPS(30);
+	GAMEPLAY::SET_TIME_SCALE(this->timeScale);
+
+	WAIT(10);
+	loadCameraSettings();
+	camera1 = CAM::CREATE_CAM((char*)"DEFAULT_SCRIPTED_CAMERA", FALSE);
+	CAM::SET_CAM_COORD(camera1, cameraSettings[0].position.x, cameraSettings[0].position.y, cameraSettings[0].position.z);
+	CAM::SET_CAM_ROT(camera1, cameraSettings[0].rotation.x, cameraSettings[0].rotation.y, cameraSettings[0].rotation.z, 2);
+	CAM::SET_CAM_FOV(camera1, 50.0f);
+
+	camera2 = CAM::CREATE_CAM((char*)"DEFAULT_SCRIPTED_CAMERA", TRUE);
+	CAM::SET_CAM_COORD(camera2, cameraSettings[1].position.x, cameraSettings[1].position.y, cameraSettings[1].position.z);
+	CAM::SET_CAM_ROT(camera2, cameraSettings[1].rotation.x, cameraSettings[1].rotation.y, cameraSettings[1].rotation.z, 2);
+	CAM::SET_CAM_FOV(camera2, 50.0f);
+
+	for (int camId = 0; camId < cameraSettings.size(); camId++) {
+
+		std::string camFolder = "cam_" + std::to_string(camId) + "\\";
+		std::string camFolderPath = this->output_path + camFolder;
+		_mkdir(camFolderPath.c_str());
+
+		std::string coordsCamPath = camFolderPath + "coords_cam_" + std::to_string(camId) + ".csv";
+		std::shared_ptr<std::ofstream> coordsCamFile = std::make_shared<std::ofstream>(coordsCamPath);
+		camCoordsFiles.push_back(coordsCamFile);
+		}
+
+	int timeToWait = 20;
+	while (timeToWait > 0) {
+
+		for (int camId = 0; camId < cameraSettings.size(); camId++) {
+
+			int frameCount = GAMEPLAY::GET_FRAME_COUNT();
+
+			std::string camFolder = "cam_" + std::to_string(camId) + "\\";
+			std::string camFolderPath = this->output_path + camFolder;
+			std::string imageName = "image_" + std::to_string(frameCount) + "_" + std::to_string(camId);
+			std::string pathImage = camFolderPath + imageName + ".jpg";
+			_mkdir(camFolderPath.c_str());
+
+			/*if (CAM::IS_CAM_ACTIVE(camera1)) {
+				CAM::SET_CAM_ACTIVE(camera1, FALSE);
+				CAM::SET_CAM_ACTIVE(camera2, TRUE);
+				CAM::RENDER_SCRIPT_CAMS(TRUE, FALSE, 0, TRUE, TRUE);
+				this->cam_coords = CAM::GET_CAM_COORD(camera2);
+				this->cam_rot = CAM::GET_CAM_ROT(camera2, 2);
+				this->fov = (int)CAM::GET_CAM_FOV(camera2);
+			}
+			else if (CAM::IS_CAM_ACTIVE(camera2)) {
+				CAM::SET_CAM_ACTIVE(camera2, FALSE);
+				CAM::SET_CAM_ACTIVE(camera1, TRUE);
+				CAM::RENDER_SCRIPT_CAMS(TRUE, FALSE, 0, TRUE, TRUE);
+				this->cam_coords = CAM::GET_CAM_COORD(camera1);
+				this->cam_rot = CAM::GET_CAM_ROT(camera1, 2);
+				this->fov = (int)CAM::GET_CAM_FOV(camera1);
+			}*/
+			CameraSetting cameraSetting = cameraSettings[camId];
+			setCamera(cameraSetting.position, cameraSetting.rotation);
+
+			WAIT(0);
+			Sleep(10);
+
+			log_file << "frame count " << frameCount <<  " Camera coords -> " << this->cam_coords.x << std::endl;
+			
+			const int maxWorldVehicles = 500;
+			int allVehicles[maxWorldVehicles];
+			int foundWorldVehicles = worldGetAllVehicles(allVehicles, maxWorldVehicles);
+
+			// bool to save image if vehicle are present in the frame 
+			boolean vehicleIsPresent = false;
+			std::vector<std::vector<std::string>> jointVehicleInfos;
+
+			
+			for (int i = 0; i < foundWorldVehicles; i++) {
+				int numJointsFound = 0;
+
+				Vector3 vehicle_coords = ENTITY::GET_ENTITY_COORDS(allVehicles[i], TRUE);
+				float vehicle2cam_distance = GAMEPLAY::GET_DISTANCE_BETWEEN_COORDS(
+					cam_coords.x, cam_coords.y, cam_coords.z,
+					vehicle_coords.x, vehicle_coords.y, vehicle_coords.z, 1
+				);
+				if (!ENTITY::IS_ENTITY_ON_SCREEN(allVehicles[i]) || !ENTITY::HAS_ENTITY_CLEAR_LOS_TO_ENTITY(PLAYER::GET_PLAYER_PED(-1),
+					allVehicles[i], 17) || !ENTITY::IS_ENTITY_VISIBLE(allVehicles[i]) || !VEHICLE::_IS_VEHICLE_ENGINE_ON(allVehicles[i])
+					|| vehicle2cam_distance > MAX_PED_TO_CAM_DISTANCE) {
+
+					//log_file << "veicolo non inquadrato o occluso o spento\n";
+					continue;
+				}
+
+				vehicleIsPresent = true;
+				std::vector<Vector3> edges = getEdgesVehicle(allVehicles[i]);
+
+				BoundingBox boundingBox;
+				boundingBox.x_max = 0;
+				boundingBox.x_min = (float)SCREEN_WIDTH;
+				boundingBox.y_max = 0;
+				boundingBox.y_min = (float)SCREEN_HEIGHT;
+
+				// get the vertices of 2D bounding box from the 8 edges of 3D vehicle
+				for (Vector3 edge : edges) {
+					float x_joint, y_joint;
+
+					get_2D_from_3D(edge, &x_joint, &y_joint);
+					x_joint = x_joint * (float)SCREEN_WIDTH;
+					y_joint = y_joint * (float)SCREEN_HEIGHT;
+
+					boundingBox.x_min = std::min<float>(x_joint, boundingBox.x_min);
+					boundingBox.x_max = std::max<float>(x_joint, boundingBox.x_max);
+					boundingBox.y_min = std::min<float>(y_joint, boundingBox.y_min);
+					boundingBox.y_max = std::max<float>(y_joint, boundingBox.y_max);
+				}
+
+				// save bounding box info for each vehicle
+				std::vector<std::string> vehicleInfoEntry = logVehicleBoundingBox(frameCount, allVehicles[i], boundingBox);
+				jointVehicleInfos.push_back(vehicleInfoEntry);
+
+				Helper::drawBox2D(
+					(int)boundingBox.x_min
+					, (int)boundingBox.y_min
+					, (int)boundingBox.x_max
+					, (int)boundingBox.y_max, 2.0f);
+				log_file << "Frame Count = " << frameCount << " cam number = " << camId << " bb_x_max : " << boundingBox.x_max << " bb_x_min : " << boundingBox.x_min << std::endl;
+			}
+			WAIT(0);
+			appendCSVLinesToFile(camCoordsFiles[camId], jointVehicleInfos);
+			saveScreenImage(pathImage);
+			//Sleep(waitTimeAfterSetCamera);
+		}
+		timeToWait--;
+	}
+	resetPlayerCam();
+
+}
+
+void Creator::setCamera(Vector3 coords, Vector3 rots) {
+
+	CAM::DESTROY_ALL_CAMS(TRUE);
+	this->camera = CAM::CREATE_CAM((char*)"DEFAULT_SCRIPTED_CAMERA", TRUE);
+	CAM::SET_CAM_COORD(this->camera, coords.x, coords.y, coords.z);
+	CAM::SET_CAM_ROT(this->camera, rots.x, rots.y, rots.z, 2);
+	CAM::SET_CAM_ACTIVE(this->camera, TRUE);
+	CAM::SET_CAM_FOV(this->camera, (float)this->fov);
+	CAM::RENDER_SCRIPT_CAMS(TRUE, FALSE, 0, TRUE, TRUE);
+
+	this->cam_coords = CAM::GET_CAM_COORD(this->camera);
+	this->cam_rot = CAM::GET_CAM_ROT(this->camera, 2);
+	this->fov = (int)CAM::GET_CAM_FOV(this->camera);
+	showingGameplayCam = false;
 }

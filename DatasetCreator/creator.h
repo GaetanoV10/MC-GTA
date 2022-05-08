@@ -1883,6 +1883,7 @@ private:
 	void saveCameraSettings();
 	void deleteCurrentCameraSetting();
 	void startCombinedRecording();
+	void RECORD();
 	BoundingBox getPaddedBoundingBox(BoundingBox occludedBox, BoundingBox nonOccludedBox);
 
 	void logTasksPed(Ped ped);
