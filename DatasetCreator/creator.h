@@ -249,10 +249,10 @@ typedef struct Helper {
 		float relativeWidth = relativeX2 - relativeX1;
 		float relativeHeight = relativeY2 - relativeY1;
 
-		GRAPHICS::DRAW_RECT(relativeX1 + relativeWidth / 2.0f, relativeY1, relativeWidth, lineThickness / (float)windowHeight, 0, 255, 0, 155);
-		GRAPHICS::DRAW_RECT(relativeX1 + relativeWidth / 2.0f, relativeY2, relativeWidth, lineThickness / (float)windowHeight, 0, 255, 0, 155);
-		GRAPHICS::DRAW_RECT(relativeX1, relativeY1 + relativeHeight / 2.0f, lineThickness / (float)windowWidth, relativeHeight, 0, 255, 0, 155);
-		GRAPHICS::DRAW_RECT(relativeX2, relativeY1 + relativeHeight / 2.0f, lineThickness / (float)windowWidth, relativeHeight, 0, 255, 0, 155);
+		GRAPHICS::DRAW_RECT(relativeX1 + relativeWidth / 2.0f, relativeY1, relativeWidth, lineThickness / (float)windowHeight, 255, 0, 0, 155);
+		GRAPHICS::DRAW_RECT(relativeX1 + relativeWidth / 2.0f, relativeY2, relativeWidth, lineThickness / (float)windowHeight, 255, 0, 0, 155);
+		GRAPHICS::DRAW_RECT(relativeX1, relativeY1 + relativeHeight / 2.0f, lineThickness / (float)windowWidth, relativeHeight, 255, 0, 0, 155);
+		GRAPHICS::DRAW_RECT(relativeX2, relativeY1 + relativeHeight / 2.0f, lineThickness / (float)windowWidth, relativeHeight, 255, 0, 0, 155);
 	}
 
 } Helper;
@@ -1416,6 +1416,7 @@ typedef struct CameraSetting {
 
 	Vector3 position;
 	Vector3 rotation;
+	int fov;
 
 	CameraSetting() {
 
@@ -1424,6 +1425,7 @@ typedef struct CameraSetting {
 	CameraSetting(Vector3 position, Vector3 rotation) {
 		this->position = position;
 		this->rotation = rotation;
+		this->fov = 50;
 	}
 
 
@@ -1434,6 +1436,7 @@ typedef struct CameraSetting {
 		rotation.x = std::stof(settingsStrings[3]);
 		rotation.y = std::stof(settingsStrings[4]);
 		rotation.z = std::stof(settingsStrings[5]);
+		fov = std::stof(settingsStrings[6]);
 
 	}
 
@@ -1443,7 +1446,8 @@ typedef struct CameraSetting {
 			+ "," + std::to_string(position.z)
 			+ "," + std::to_string(rotation.x)
 			+ "," + std::to_string(rotation.y)
-			+ "," + std::to_string(rotation.z);
+			+ "," + std::to_string(rotation.z)
+			+ "," + std::to_string(fov);
 	}
 
 } CameraSetting;
@@ -1817,6 +1821,7 @@ private:
 	void recordAtCamSettingsLoop();
 	void logPedestrians(int imageCountPerCam, int frameCount, int camId, std::shared_ptr<std::ofstream>);
 	void setCamera(Vector3 coords, Vector3 rots);
+	void setCamera(Vector3 coords, Vector3 rots, int fov);
 	void appendCSVLinesToFile(std::shared_ptr<std::ofstream>, std::vector<std::vector<std::string>> stringVector);
 	void logPedAppearance();
 	std::vector<std::vector<std::string>> readStringCSV(std::string filePath);
@@ -1878,12 +1883,14 @@ private:
 	std::vector<JointPosition> getPedJointPoints(Ped ped);
 	std::vector<JointPosition> getVehicleJointPoints(Vehicle vehicle);
 	std::vector<Vector3> getEdgesVehicle(Vehicle vehicle);
-	std::vector<std::string> logVehicleBoundingBox(int frameCount, Vehicle vehicle, BoundingBox boundingBox);
+	std::vector<std::string> logVehicleBoundingBox(int frameCount, float frameTime, Vehicle vehicle, BoundingBox boundingBox);
 	void drawVehicle2dBoxViaJoints();
 	void saveCameraSettings();
 	void deleteCurrentCameraSetting();
 	void startCombinedRecording();
 	void RECORD();
+	void appendBoundingBoxedInfosToFile(std::map<int, std::vector<std::vector<std::string>>> mapVehiclesInfos);
+	boolean checkFileBound(std::map<int, std::vector<std::vector<std::string>>> mapVehiclesInfos);
 	BoundingBox getPaddedBoundingBox(BoundingBox occludedBox, BoundingBox nonOccludedBox);
 
 	void logTasksPed(Ped ped);
