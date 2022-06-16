@@ -1883,7 +1883,7 @@ private:
 	std::vector<JointPosition> getPedJointPoints(Ped ped);
 	std::vector<JointPosition> getVehicleJointPoints(Vehicle vehicle);
 	std::vector<Vector3> getEdgesVehicle(Vehicle vehicle);
-	std::vector<std::string> logVehicleBoundingBox(int frameCount, float frameTime, Vehicle vehicle, BoundingBox boundingBox);
+	std::vector<std::string> logVehicleBoundingBox(int frameCount, float frameTime, Vehicle vehicle, BoundingBox boundingBox, Vector3 vehicle_coords, int vehicleCocoClass);
 	void drawVehicle2dBoxViaJoints();
 	void saveCameraSettings();
 	void deleteCurrentCameraSetting();
