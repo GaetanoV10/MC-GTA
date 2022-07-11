@@ -7,16 +7,20 @@ C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.h(9
 C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.h(994,27): warning C4244: 'inizializzazione': conversione da 'double' a 'float'. Possibile perdita di dati.
 C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.h(1439,18): warning C4244: '=': conversione da 'float' a 'int'. Possibile perdita di dati.
   The contents of <filesystem> are available only with C++17 or later.
+C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(1412,18): warning C4244: 'inizializzazione': conversione da 'Any' a 'float'. Possibile perdita di dati.
+C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(1472,105): warning C4244: 'argomento': conversione da 'Any' a 'float'. Possibile perdita di dati.
+C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(1759,19): warning C4244: 'inizializzazione': conversione da 'Any' a 'float'. Possibile perdita di dati.
 C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(2222,16): warning C4244: 'inizializzazione': conversione da 'double' a 'float'. Possibile perdita di dati.
 C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(2535,16): warning C4244: 'inizializzazione': conversione da 'double' a 'float'. Possibile perdita di dati.
 C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(2558,16): warning C4244: 'inizializzazione': conversione da 'double' a 'float'. Possibile perdita di dati.
 C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(3136,45): warning C4267: '=': conversione da 'size_t' a 'int'. Possibile perdita di dati.
 C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(4365,14): warning C4244: 'inizializzazione': conversione da 'double' a 'float'. Possibile perdita di dati.
-C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(4844,137): warning C4244: 'argomento': conversione da 'double' a 'float'. Possibile perdita di dati.
-C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(4971,14): warning C4244: '=': conversione da 'double' a 'float'. Possibile perdita di dati.
-C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(4972,14): warning C4244: '=': conversione da 'double' a 'float'. Possibile perdita di dati.
-C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(4973,14): warning C4244: '=': conversione da 'double' a 'float'. Possibile perdita di dati.
-C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(5079,33): warning C4244: 'argomento': conversione da 'int' a 'float'. Possibile perdita di dati.
+C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(4850,137): warning C4244: 'argomento': conversione da 'double' a 'float'. Possibile perdita di dati.
+C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(4859,20): warning C4244: 'inizializzazione': conversione da 'Any' a 'float'. Possibile perdita di dati.
+C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(4976,14): warning C4244: '=': conversione da 'double' a 'float'. Possibile perdita di dati.
+C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(4977,14): warning C4244: '=': conversione da 'double' a 'float'. Possibile perdita di dati.
+C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(4978,14): warning C4244: '=': conversione da 'double' a 'float'. Possibile perdita di dati.
+C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(5084,33): warning C4244: 'argomento': conversione da 'int' a 'float'. Possibile perdita di dati.
   DatasetCreator.vcxproj -> C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\x64\Debug\DatasetCreator.asi
   C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\x64\Debug\DatasetCreator.asi
   1 File copiati

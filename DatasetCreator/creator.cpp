@@ -1409,7 +1409,7 @@ void Creator::drawVehicle2dBoxViaJoints() {
 
 	// GET framecount to log BB infos and relative images
 	int frameCount = GAMEPLAY::GET_FRAME_COUNT();
-	float frameTime = GAMEPLAY::GET_FRAME_TIME();
+	float frameTime = GAMEPLAY::GET_GAME_TIMER();
 
 	// SETUP cam path and image name for each frame
 	std::string camFolder = "cam\\";
@@ -1469,7 +1469,7 @@ void Creator::drawVehicle2dBoxViaJoints() {
 		}
 
 		// save bounding box info for each vehicle
-		std::vector<std::string> vehicleInfoEntry = logVehicleBoundingBox(frameCount, GAMEPLAY::GET_FRAME_TIME(), allVehicles[i], boundingBox, vehicle_coords, 3);
+		std::vector<std::string> vehicleInfoEntry = logVehicleBoundingBox(frameCount, GAMEPLAY::GET_GAME_TIMER(), allVehicles[i], boundingBox, vehicle_coords, 3);
 		jointVehicleInfos.push_back(vehicleInfoEntry);
 
 		Helper::drawBox2D(
@@ -1756,7 +1756,7 @@ void Creator::recordAllCamsOnce() {
 		//Sleep(waitTimeAfterSetCamera); //without this line the old camera image will be recorded
 		//setNativePedsInvisible();
 		int frameCount = GAMEPLAY::GET_FRAME_COUNT();
-		float frameTime = GAMEPLAY::GET_FRAME_TIME();
+		float frameTime = GAMEPLAY::GET_GAME_TIMER();
 		//logPedestrians(imageCountPerCam, frameCount, camId, camCoordsFiles[camId]);
 
 		//ENTITY::SET_ENTITY_VISIBLE(PLAYER::GET_PLAYER_PED(-1), false, 0);
@@ -4814,7 +4814,7 @@ void Creator::RECORD() {
 	//TIME::SET_CLOCK_TIME(10, 0, 0);
 	std::map<int, std::vector<std::vector<std::string>>> mapVehiclesInfos;
 
-	setTimeScaleViaPerCamFPS(30);
+	setTimeScaleViaPerCamFPS(this->fpsPerCam);
 	log_file << "time scale --> " << this->timeScale << std::endl;
 	GAMEPLAY::SET_TIME_SCALE(this->timeScale);
 
@@ -4834,19 +4834,29 @@ void Creator::RECORD() {
 		mapVehiclesInfos[camId].push_back({});
 		}
 
-	int timeToWait = 200;
+	int timeToWait = 3000;
 	while (timeToWait > 0) {
+
+		if (TIME::GET_CLOCK_HOURS() > 15) {
+			int m = TIME::GET_CLOCK_MINUTES();
+			TIME::SET_CLOCK_TIME(9, m, 0);
+		}
 
 		for (int camId = 0; camId < cameraSettings.size(); camId++) {
 
 			CameraSetting cameraSetting = cameraSettings[camId];
 			setCamera(cameraSetting.position, cameraSetting.rotation, cameraSetting.fov);
-			PED::SET_PED_COORDS_NO_GANG(PLAYER::GET_PLAYER_PED(-1), cameraSetting.position.x, cameraSetting.position.y, cameraSetting.position.z - 0.5);
+
+			PED::SET_PED_COORDS_NO_GANG(PLAYER::GET_PLAYER_PED(-1), cameraSetting.position.x, cameraSetting.position.y, cameraSetting.position.z + 1.5);
 			WAIT(0);
-			Sleep(20);
+			Sleep(30);
+
+			GAMEPLAY::SET_GAME_PAUSED(true);
+			WAIT(50);
+			GAMEPLAY::SET_GAME_PAUSED(false);
 
 			int frameCount = GAMEPLAY::GET_FRAME_COUNT();
-			float frameTime = GAMEPLAY::GET_FRAME_TIME();
+			float frameTime = GAMEPLAY::GET_GAME_TIMER();
 
 			std::string camFolder = "cam-" + std::to_string(camId) + "\\";
 			std::string camFolderPath = this->output_path + camFolder;
@@ -4855,11 +4865,6 @@ void Creator::RECORD() {
 			_mkdir(camFolderPath.c_str());
 
 			//log_file << "frame count " << frameCount <<  " Camera coords -> " << this->cam_coords.x << std::endl;
-			
-			//GAMEPLAY::SET_GAME_PAUSED(true);
-			//// teleport player to populate area seen from camera
-			//PED::SET_PED_COORDS_NO_GANG(PLAYER::GET_PLAYER_PED(-1), cameraSetting.position.x, cameraSetting.position.y, cameraSetting.position.z);
-			//WAIT(10);
 			
 			const int maxWorldVehicles = 1500;
 			int allVehicles[maxWorldVehicles];
@@ -4876,7 +4881,7 @@ void Creator::RECORD() {
 					vehicle_coords.x, vehicle_coords.y, vehicle_coords.z, 1
 				);
 				if (!ENTITY::IS_ENTITY_ON_SCREEN(allVehicles[i])  /* || !ENTITY::HAS_ENTITY_CLEAR_LOS_TO_ENTITY(PLAYER::GET_PLAYER_PED(-1),
-					allVehicles[i], 17)*/ || !ENTITY::IS_ENTITY_VISIBLE(allVehicles[i]) /* || !VEHICLE::_IS_VEHICLE_ENGINE_ON(allVehicles[i]) */
+					allVehicles[i], 17)*/ || !ENTITY::IS_ENTITY_VISIBLE(allVehicles[i])  || !VEHICLE::_IS_VEHICLE_ENGINE_ON(allVehicles[i]) 
 					|| vehicle2cam_distance > MAX_PED_TO_CAM_DISTANCE) {
 
 					//log_file << "veicolo non inquadrato o occluso o spento\n";
@@ -4887,13 +4892,13 @@ void Creator::RECORD() {
 				int vehicleClass = VEHICLE::GET_VEHICLE_CLASS(allVehicles[i]);
 				log_file << "Cam ID: " << camId << " Frame #: " << frameCount << " vehicle gta class: " << vehicleClass << std::endl;
 				if (cars.find(vehicleClass) != cars.end()) {
-					vehicleCocoClass = 3;
+					vehicleCocoClass = 2;
 				}
 				else if (truck.find(vehicleClass) != truck.end()) {
-					vehicleCocoClass = 8;
+					vehicleCocoClass = 7;
 				}
 				else {
-					vehicleCocoClass = 3;
+					vehicleCocoClass = 2;
 				}
 
 				std::vector<Vector3> edges = getEdgesVehicle(allVehicles[i]);
