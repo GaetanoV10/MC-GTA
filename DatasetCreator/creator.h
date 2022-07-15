@@ -1695,6 +1695,7 @@ private:
 	const std::string time_scale_param_name_ = "time_scale";
 	const std::string fps_per_cam_param_name_ = "fps_per_cam";
 	const std::string is_debug_param_name_ = "is_debug";
+	const std::string iteration_ = "iteration";
 
 
 	std::string output_path;
@@ -1758,6 +1759,7 @@ private:
 	int is_night;
 	float timeScale = 0.8f;
 	int fpsPerCam;
+	int iterations;
 	float currTimeScale = 1.0f;
 	
 	HWND hWnd;

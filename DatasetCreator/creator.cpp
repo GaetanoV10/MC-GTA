@@ -264,7 +264,7 @@ void Creator::registerParams() {
 	float_params_.registerParam(this->time_scale_param_name_);
 	bool_params_.registerParam(this->is_debug_param_name_);
 	int_params_.registerParam(this->fps_per_cam_param_name_);
-
+	int_params_.registerParam(this->iteration_);
 }
 
 
@@ -281,6 +281,7 @@ bool_params_(config_file) {
 	this->is_debug = bool_params_.getParam(this->is_debug_param_name_);
 	this->timeScale = float_params_.getParam(this->time_scale_param_name_);
 	this->fpsPerCam = int_params_.getParam(this->fps_per_cam_param_name_);
+	this->iterations = int_params_.getParam(this->iteration_);
 
 
 
@@ -4834,7 +4835,7 @@ void Creator::RECORD() {
 		mapVehiclesInfos[camId].push_back({});
 		}
 
-	int timeToWait = 3000;
+	int timeToWait = this->iterations;
 	while (timeToWait > 0) {
 
 		if (TIME::GET_CLOCK_HOURS() > 15) {
