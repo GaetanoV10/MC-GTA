@@ -1696,6 +1696,7 @@ private:
 	const std::string fps_per_cam_param_name_ = "fps_per_cam";
 	const std::string is_debug_param_name_ = "is_debug";
 	const std::string iteration_ = "iteration";
+	const std::string max_vehicle_distance_ = "max_distance";
 
 
 	std::string output_path;
@@ -1760,6 +1761,7 @@ private:
 	float timeScale = 0.8f;
 	int fpsPerCam;
 	int iterations;
+	int maxVehicleDistance;
 	float currTimeScale = 1.0f;
 	
 	HWND hWnd;
@@ -1886,7 +1888,7 @@ private:
 	std::vector<JointPosition> getVehicleJointPoints(Vehicle vehicle);
 	std::vector<Vector3> getEdgesVehicle(Vehicle vehicle);
 	std::vector<std::string> logVehicleBoundingBox(int frameCount, float frameTime, Vehicle vehicle, BoundingBox boundingBox, Vector3 vehicle_coords, int vehicleCocoClass);
-	void drawVehicle2dBoxViaJoints();
+	void drawVehicle2dBoundingBox();
 	void saveCameraSettings();
 	void deleteCurrentCameraSetting();
 	void startCombinedRecording();

@@ -21,6 +21,7 @@
 #define DISPLAY_FLAG TRUE
 #define WANDERING_RADIUS 10.0
 #define MAX_PED_TO_CAM_DISTANCE 150.0
+#define MAX_VEHICLE_TO_CAM_DISTANCE 150.0
 #define DEMO FALSE
 #define MAX_VARIATION_COMPONENTS 12
 
@@ -265,6 +266,7 @@ void Creator::registerParams() {
 	bool_params_.registerParam(this->is_debug_param_name_);
 	int_params_.registerParam(this->fps_per_cam_param_name_);
 	int_params_.registerParam(this->iteration_);
+	int_params_.registerParam(this->max_vehicle_distance_);
 }
 
 
@@ -282,6 +284,7 @@ bool_params_(config_file) {
 	this->timeScale = float_params_.getParam(this->time_scale_param_name_);
 	this->fpsPerCam = int_params_.getParam(this->fps_per_cam_param_name_);
 	this->iterations = int_params_.getParam(this->iteration_);
+	this->maxVehicleDistance = int_params_.getParam(this->max_vehicle_distance_);
 
 
 
@@ -643,9 +646,9 @@ void Creator::updateNew() {
 	visualizeTaskNodes();
 	update_status_text();
 	setNativePedsInvisible();
-	recordAllCamsOnce();
+	//recordAllCamsOnce(); substituted by RECORD()
 	showFrameRate();
-	drawVehicle2dBoxViaJoints();
+	drawVehicle2dBoundingBox();
 	rotateAndMoveWallElements();
 
 }
@@ -1383,107 +1386,6 @@ void Creator::drawPedBox3D() {
 
 }
 
-int camId = 0;
-
-void Creator::drawVehicle2dBoxViaJoints() {
-
-	if (!shouldDrawPed2dBox) {
-		return;
-	}
-
-	GAMEPLAY::SET_TIME_SCALE(0.5);
-	loadCameraSettings();
-
-	if (IsKeyJustUp(VK_F9)) {
-		if (camId == cameraSettings.size() - 1)
-			camId = 0;
-		else 
-			camId++;
-	}
-
-	ENTITY::SET_ENTITY_VISIBLE(PLAYER::GET_PLAYER_PED(-1), false, 0);
-
-	setCamera(cameraSettings[camId].position, cameraSettings[camId].rotation, 65);
-	PED::SET_PED_COORDS_NO_GANG(PLAYER::GET_PLAYER_PED(-1), cameraSettings[camId].position.x, cameraSettings[camId].position.y, cameraSettings[camId].position.z);
-
-	//TIME::SET_CLOCK_TIME(16, 0, 0);
-
-	// GET framecount to log BB infos and relative images
-	int frameCount = GAMEPLAY::GET_FRAME_COUNT();
-	float frameTime = GAMEPLAY::GET_GAME_TIMER();
-
-	// SETUP cam path and image name for each frame
-	std::string camFolder = "cam\\";
-	std::string camFolderPath = this->output_path + camFolder;
-	std::string imageName = "image_" + std::to_string(frameCount);
-	_mkdir(camFolderPath.c_str());
-
-	std::string pathImage = camFolderPath + imageName + ".jpg";
-	std::string coordsCamPath = camFolderPath + "info_vehicles.csv";
-
-	std::shared_ptr<std::ofstream> coordsCamFile = std::make_shared<std::ofstream>(coordsCamPath);
-
-	const int maxWorldVehicles = 1000;
-	int allVehicles[maxWorldVehicles];
-	int foundWorldVehicles = worldGetAllVehicles(allVehicles, maxWorldVehicles);
-
-	// bool to save image if vehicle are present in the frame 
-	boolean vehicleIsPresent = false;
-	std::vector<std::vector<std::string>> jointVehicleInfos;
-	for (int i = 0; i < foundWorldVehicles; i++) {
-		int numJointsFound = 0;
-
-		Vector3 vehicle_coords = ENTITY::GET_ENTITY_COORDS(allVehicles[i], TRUE);
-		float vehicle2cam_distance = GAMEPLAY::GET_DISTANCE_BETWEEN_COORDS(
-			cam_coords.x, cam_coords.y, cam_coords.z,
-			vehicle_coords.x, vehicle_coords.y, vehicle_coords.z, 1
-		);
-		if (!ENTITY::IS_ENTITY_ON_SCREEN(allVehicles[i])  /*|| !ENTITY::HAS_ENTITY_CLEAR_LOS_TO_ENTITY(PLAYER::GET_PLAYER_PED(-1),
-			allVehicles[i], 17)*/ || !ENTITY::IS_ENTITY_VISIBLE(allVehicles[i])  || !VEHICLE::_IS_VEHICLE_ENGINE_ON(allVehicles[i]) 
-			|| vehicle2cam_distance > MAX_PED_TO_CAM_DISTANCE) {
-
-			//log_file << "veicolo non inquadrato o occluso o spento\n";
-			continue;
-		}
-
-		vehicleIsPresent = true;
-		std::vector<Vector3> edges = getEdgesVehicle(allVehicles[i]);
-	
-		BoundingBox boundingBox;
-		boundingBox.x_max = 0;
-		boundingBox.x_min = (float)SCREEN_WIDTH;
-		boundingBox.y_max = 0;
-		boundingBox.y_min = (float)SCREEN_HEIGHT;
-
-		// get the vertices of 2D bounding box from the 8 edges of 3D vehicle
-		for (Vector3 edge : edges) {
-			float x_joint, y_joint;
-
-			get_2D_from_3D(edge, &x_joint, &y_joint);
-			x_joint = x_joint * (float)SCREEN_WIDTH;
-			y_joint = y_joint * (float)SCREEN_HEIGHT;
-
-			boundingBox.x_min = std::min<float>(x_joint, boundingBox.x_min);
-			boundingBox.x_max = std::max<float>(x_joint, boundingBox.x_max);
-			boundingBox.y_min = std::min<float>(y_joint, boundingBox.y_min);
-			boundingBox.y_max = std::max<float>(y_joint, boundingBox.y_max);
-		}
-
-		// save bounding box info for each vehicle
-		std::vector<std::string> vehicleInfoEntry = logVehicleBoundingBox(frameCount, GAMEPLAY::GET_GAME_TIMER(), allVehicles[i], boundingBox, vehicle_coords, 3);
-		jointVehicleInfos.push_back(vehicleInfoEntry);
-
-		Helper::drawBox2D(
-			(int)boundingBox.x_min
-			, (int)boundingBox.y_min
-			, (int)boundingBox.x_max
-			, (int)boundingBox.y_max, 2.0f);
-	}
-	//appendCSVLinesToFile(coordsCamFile, jointVehicleInfos);
-	/*if (vehicleIsPresent)
-		saveScreenImage(pathImage);*/
-}
-
 std::vector<JointPosition> Creator::getPedJointPoints(Ped ped) {
 
 	std::vector<JointPosition> resultJoints;
@@ -1577,85 +1479,7 @@ std::vector<JointPosition> Creator::getPedJointPoints(Ped ped) {
 	return resultJoints;
 }
 
-std::vector<JointPosition> Creator::getVehicleJointPoints(Vehicle vehicle)
-{
-	std::vector<JointPosition> resultJoints;
-	for (int n = 0; n < vehicle_bones.size(); n++) {
-		JointPosition jointPosition;
-		Vector3 joint_coords;
 
-		joint_coords = ENTITY::GET_WORLD_POSITION_OF_ENTITY_BONE(vehicle, ENTITY::GET_ENTITY_BONE_INDEX_BY_NAME(vehicle, (char*)vehicle_bones[n]));
-
-		//log_file << vehicle << " = " << joint_coords.x << ", " << joint_coords.y << ", " << joint_coords.z << "---- "
-		//	<< (char*)vehicle_bones[n] << std::endl << std::endl;
-
-		// finding the versor (dx, dy, dz) pointing from the joint to the cam
-		this->cam_coords = CAM::GET_GAMEPLAY_CAM_COORD();
-		float joint2cam_distance = GAMEPLAY::GET_DISTANCE_BETWEEN_COORDS(
-			joint_coords.x, joint_coords.y, joint_coords.z,
-			cam_coords.x, cam_coords.y, cam_coords.z, 1
-		);
-		float dx = (cam_coords.x - joint_coords.x) / joint2cam_distance;
-		float dy = (cam_coords.y - joint_coords.y) / joint2cam_distance;
-		float dz = (cam_coords.z - joint_coords.z) / joint2cam_distance;
-
-		// ray #1: from joint to cam_coords (ignoring the vehicle to whom the joint belongs and intersecting only vehicle (2))
-		// ==> useful for detecting occlusions of vehicle
-		Vector3 end_coords1, surface_norm1;
-		BOOL occlusion_vehicle;
-		Entity entityHit1 = 0;
-
-		int ray_ped_occlusion = WORLDPROBE::_CAST_RAY_POINT_TO_POINT(
-			joint_coords.x, joint_coords.y, joint_coords.z,
-			cam_coords.x, cam_coords.y, cam_coords.z,
-			2, vehicle, 4
-		);
-		WORLDPROBE::_GET_RAYCAST_RESULT(ray_ped_occlusion, &occlusion_vehicle, &end_coords1, &surface_norm1, &entityHit1);
-
-		if (entityHit1 == ped_with_cam)
-			occlusion_vehicle = FALSE;
-
-		jointPosition.occluded_vehicle = occlusion_vehicle;
-
-		// ray #2: from joint to camera (without ignoring the vehicle to whom the joint belongs and intersecting only vehicle (2))
-		// ==> useful for detecting self-occlusions
-		Vector3 endCoords2, surfaceNormal2;
-		BOOL occlusion_self;
-		Entity entityHit2 = 0;
-		int ray_joint2cam = WORLDPROBE::_CAST_RAY_POINT_TO_POINT(
-			joint_coords.x + 0.1f * dx, joint_coords.y + 0.1f * dy, joint_coords.z + 0.1f * dz,
-			cam_coords.x, cam_coords.y, cam_coords.z,
-			2, 0, 4
-		);
-		WORLDPROBE::_GET_RAYCAST_RESULT(ray_joint2cam, &occlusion_self, &endCoords2, &surfaceNormal2, &entityHit2);
-
-		if (entityHit2 == ped_with_cam)
-			occlusion_self = FALSE;
-
-		jointPosition.occluded_self = occlusion_self;
-
-		// ray #3: from camera to joint (ignoring the vehicle to whom the joint belongs and intersecting everything but vehicle (2))
-		// ==> useful for detecting occlusions with objects
-		Vector3 endCoords3, surfaceNormal3;
-		BOOL occlusion_object;
-		Entity entityHit3 = 0;
-		int ray_joint2cam_obj = WORLDPROBE::_CAST_RAY_POINT_TO_POINT(
-			cam_coords.x, cam_coords.y, cam_coords.z,
-			joint_coords.x, joint_coords.y, joint_coords.z,
-			2, 0, 4
-		);
-
-		WORLDPROBE::_GET_RAYCAST_RESULT(ray_joint2cam_obj, &occlusion_object, &endCoords3, &surfaceNormal3, &entityHit3);
-
-		jointPosition.occluded_object = occlusion_object;
-
-		jointPosition.position = joint_coords;
-		resultJoints.push_back(jointPosition);
-
-	}
-
-	return resultJoints;
-}
 
 BoundingBox Creator::getPaddedBoundingBox(BoundingBox occludedBoxMaxMin, BoundingBox nonOccludedBoxMaxMin) {
 	BoundingBox resultBox;
@@ -4810,11 +4634,210 @@ void Creator::startCombinedRecording() {
 
 }
 
+std::vector<JointPosition> Creator::getVehicleJointPoints(Vehicle vehicle)
+{
+	std::vector<JointPosition> resultJoints;
+	for (int n = 0; n < vehicle_bones.size(); n++) {
+		JointPosition jointPosition;
+		Vector3 joint_coords;
+
+		joint_coords = ENTITY::GET_WORLD_POSITION_OF_ENTITY_BONE(vehicle, ENTITY::GET_ENTITY_BONE_INDEX_BY_NAME(vehicle, (char*)vehicle_bones[n]));
+
+		//log_file << vehicle << " = " << joint_coords.x << ", " << joint_coords.y << ", " << joint_coords.z << "---- "
+		//	<< (char*)vehicle_bones[n] << std::endl << std::endl;
+
+		// finding the versor (dx, dy, dz) pointing from the joint to the cam
+		this->cam_coords = CAM::GET_GAMEPLAY_CAM_COORD();
+		float joint2cam_distance = GAMEPLAY::GET_DISTANCE_BETWEEN_COORDS(
+			joint_coords.x, joint_coords.y, joint_coords.z,
+			cam_coords.x, cam_coords.y, cam_coords.z, 1
+		);
+		float dx = (cam_coords.x - joint_coords.x) / joint2cam_distance;
+		float dy = (cam_coords.y - joint_coords.y) / joint2cam_distance;
+		float dz = (cam_coords.z - joint_coords.z) / joint2cam_distance;
+
+		// ray #1: from joint to cam_coords (ignoring the vehicle to whom the joint belongs and intersecting only vehicle (2))
+		// ==> useful for detecting occlusions of vehicle
+		Vector3 end_coords1, surface_norm1;
+		BOOL occlusion_vehicle;
+		Entity entityHit1 = 0;
+
+		int ray_ped_occlusion = WORLDPROBE::_CAST_RAY_POINT_TO_POINT(
+			joint_coords.x, joint_coords.y, joint_coords.z,
+			cam_coords.x, cam_coords.y, cam_coords.z,
+			2, vehicle, 4
+		);
+		WORLDPROBE::_GET_RAYCAST_RESULT(ray_ped_occlusion, &occlusion_vehicle, &end_coords1, &surface_norm1, &entityHit1);
+
+		if (entityHit1 == ped_with_cam)
+			occlusion_vehicle = FALSE;
+
+		jointPosition.occluded_vehicle = occlusion_vehicle;
+
+		// ray #2: from joint to camera (without ignoring the vehicle to whom the joint belongs and intersecting only vehicle (2))
+		// ==> useful for detecting self-occlusions
+		Vector3 endCoords2, surfaceNormal2;
+		BOOL occlusion_self;
+		Entity entityHit2 = 0;
+		int ray_joint2cam = WORLDPROBE::_CAST_RAY_POINT_TO_POINT(
+			joint_coords.x + 0.1f * dx, joint_coords.y + 0.1f * dy, joint_coords.z + 0.1f * dz,
+			cam_coords.x, cam_coords.y, cam_coords.z,
+			2, 0, 4
+		);
+		WORLDPROBE::_GET_RAYCAST_RESULT(ray_joint2cam, &occlusion_self, &endCoords2, &surfaceNormal2, &entityHit2);
+
+		if (entityHit2 == ped_with_cam)
+			occlusion_self = FALSE;
+
+		jointPosition.occluded_self = occlusion_self;
+
+		// ray #3: from camera to joint (ignoring the vehicle to whom the joint belongs and intersecting everything but vehicle (2))
+		// ==> useful for detecting occlusions with objects
+		Vector3 endCoords3, surfaceNormal3;
+		BOOL occlusion_object;
+		Entity entityHit3 = 0;
+		int ray_joint2cam_obj = WORLDPROBE::_CAST_RAY_POINT_TO_POINT(
+			cam_coords.x, cam_coords.y, cam_coords.z,
+			joint_coords.x, joint_coords.y, joint_coords.z,
+			2, 0, 4
+		);
+
+		WORLDPROBE::_GET_RAYCAST_RESULT(ray_joint2cam_obj, &occlusion_object, &endCoords3, &surfaceNormal3, &entityHit3);
+
+		jointPosition.occluded_object = occlusion_object;
+
+		jointPosition.position = joint_coords;
+		resultJoints.push_back(jointPosition);
+
+	}
+
+	return resultJoints;
+}
+
+int camId = 0;
+
+void Creator::drawVehicle2dBoundingBox() {
+
+	if (!shouldDrawPed2dBox) {
+		return;
+	}
+
+	GAMEPLAY::SET_TIME_SCALE(0.8);
+	loadCameraSettings();
+
+	if (IsKeyJustUp(VK_F9)) {
+		if (camId == cameraSettings.size() - 1)
+			camId = 0;
+		else
+			camId++;
+	}
+
+	ENTITY::SET_ENTITY_VISIBLE(PLAYER::GET_PLAYER_PED(-1), false, 0);
+
+	setCamera(cameraSettings[camId].position, cameraSettings[camId].rotation, 65);
+	PED::SET_PED_COORDS_NO_GANG(PLAYER::GET_PLAYER_PED(-1), cameraSettings[camId].position.x, cameraSettings[camId].position.y, cameraSettings[camId].position.z);
+
+	//TIME::SET_CLOCK_TIME(16, 0, 0);
+
+	// GET framecount to log BB infos and relative images
+	int frameCount = GAMEPLAY::GET_FRAME_COUNT();
+	float frameTime = GAMEPLAY::GET_GAME_TIMER();
+
+	// SETUP cam path and image name for each frame
+	std::string camFolder = "cam\\";
+	std::string camFolderPath = this->output_path + camFolder;
+	std::string imageName = "image_" + std::to_string(frameCount);
+	_mkdir(camFolderPath.c_str());
+
+	std::string pathImage = camFolderPath + imageName + ".jpg";
+	std::string coordsCamPath = camFolderPath + "info_vehicles.csv";
+
+	std::shared_ptr<std::ofstream> coordsCamFile = std::make_shared<std::ofstream>(coordsCamPath);
+
+	const int maxWorldVehicles = 1000;
+	int allVehicles[maxWorldVehicles];
+	int foundWorldVehicles = worldGetAllVehicles(allVehicles, maxWorldVehicles);
+
+	// bool to save image if vehicle are present in the frame 
+	boolean vehicleIsPresent = false;
+	std::vector<std::vector<std::string>> jointVehicleInfos;
+	for (int i = 0; i < foundWorldVehicles; i++) {
+		int numJointsFound = 0;
+
+		Vector3 vehicle_coords = ENTITY::GET_ENTITY_COORDS(allVehicles[i], TRUE);
+		float vehicle2cam_distance = GAMEPLAY::GET_DISTANCE_BETWEEN_COORDS(
+			cam_coords.x, cam_coords.y, cam_coords.z,
+			vehicle_coords.x, vehicle_coords.y, vehicle_coords.z, 1
+		);
+
+		// ray #1: from joint to cam_coords (ignoring the vehicle to whom the joint belongs and intersecting only vehicle (2))
+		// ==> useful for detecting occlusions of vehicle
+		/*Vector3 end_coords1, surface_norm1;
+		BOOL occlusion_vehicle;
+		Entity entityHit1 = 0;
+		Vector3 player_coords = ENTITY::GET_ENTITY_COORDS(PLAYER::GET_PLAYER_PED(-1), true);
+
+		int ray_vehicle_occlusion = WORLDPROBE::_CAST_RAY_POINT_TO_POINT(
+			cam_coords.x, cam_coords.y, cam_coords.z,
+			vehicle_coords.x, vehicle_coords.y, vehicle_coords.z,
+			-1, 0, 7
+		);
+		
+		WORLDPROBE::_GET_RAYCAST_RESULT(ray_vehicle_occlusion, &occlusion_vehicle, &end_coords1, &surface_norm1, &entityHit1);
+		log_file << "cam entity id" << this->camera  << " entity hit" << entityHit1 << " vehicle occluded " << occlusion_vehicle << std::endl;*/
+
+		if (!ENTITY::IS_ENTITY_ON_SCREEN(allVehicles[i]) || !ENTITY::HAS_ENTITY_CLEAR_LOS_TO_ENTITY(PLAYER::GET_PLAYER_PED(-1),
+			allVehicles[i], 17) || !ENTITY::IS_ENTITY_VISIBLE(allVehicles[i]) || !VEHICLE::_IS_VEHICLE_ENGINE_ON(allVehicles[i])
+			|| vehicle2cam_distance > this->maxVehicleDistance) {
+
+			//log_file << "veicolo non inquadrato o occluso o spento\n";
+			continue;
+		}
+
+		vehicleIsPresent = true;
+		std::vector<Vector3> edges = getEdgesVehicle(allVehicles[i]);
+
+		BoundingBox boundingBox;
+		boundingBox.x_max = 0;
+		boundingBox.x_min = (float)SCREEN_WIDTH;
+		boundingBox.y_max = 0;
+		boundingBox.y_min = (float)SCREEN_HEIGHT;
+
+		// get the vertices of 2D bounding box from the 8 edges of 3D vehicle
+		for (Vector3 edge : edges) {
+			float x_joint, y_joint;
+
+			get_2D_from_3D(edge, &x_joint, &y_joint);
+			x_joint = x_joint * (float)SCREEN_WIDTH;
+			y_joint = y_joint * (float)SCREEN_HEIGHT;
+
+			boundingBox.x_min = std::min<float>(x_joint, boundingBox.x_min);
+			boundingBox.x_max = std::max<float>(x_joint, boundingBox.x_max);
+			boundingBox.y_min = std::min<float>(y_joint, boundingBox.y_min);
+			boundingBox.y_max = std::max<float>(y_joint, boundingBox.y_max);
+		}
+
+		// save bounding box info for each vehicle
+		std::vector<std::string> vehicleInfoEntry = logVehicleBoundingBox(frameCount, GAMEPLAY::GET_GAME_TIMER(), allVehicles[i], boundingBox, vehicle_coords, 3);
+		jointVehicleInfos.push_back(vehicleInfoEntry);
+
+		Helper::drawBox2D(
+			(int)boundingBox.x_min
+			, (int)boundingBox.y_min
+			, (int)boundingBox.x_max
+			, (int)boundingBox.y_max, 2.0f);
+	}
+	//appendCSVLinesToFile(coordsCamFile, jointVehicleInfos);
+	/*if (vehicleIsPresent)
+		saveScreenImage(pathImage);*/
+}
+
 void Creator::RECORD() {
 
 	//TIME::SET_CLOCK_TIME(10, 0, 0);
 	std::map<int, std::vector<std::vector<std::string>>> mapVehiclesInfos;
 
+	// Slow motion in game accordingly to frame rate at which record!
 	setTimeScaleViaPerCamFPS(this->fpsPerCam);
 	log_file << "time scale --> " << this->timeScale << std::endl;
 	GAMEPLAY::SET_TIME_SCALE(this->timeScale);
@@ -4874,6 +4897,7 @@ void Creator::RECORD() {
 			//std::vector<std::vector<std::string>> jointVehicleInfos;
 
 			int vehicleCocoClass;
+			boolean vehicleIsPresent = false;
 			for (int i = 0; i < foundWorldVehicles; i++) {
 
 				Vector3 vehicle_coords = ENTITY::GET_ENTITY_COORDS(allVehicles[i], TRUE);
@@ -4881,15 +4905,16 @@ void Creator::RECORD() {
 					cam_coords.x, cam_coords.y, cam_coords.z,
 					vehicle_coords.x, vehicle_coords.y, vehicle_coords.z, 1
 				);
-				if (!ENTITY::IS_ENTITY_ON_SCREEN(allVehicles[i])  /* || !ENTITY::HAS_ENTITY_CLEAR_LOS_TO_ENTITY(PLAYER::GET_PLAYER_PED(-1),
-					allVehicles[i], 17)*/ || !ENTITY::IS_ENTITY_VISIBLE(allVehicles[i])  || !VEHICLE::_IS_VEHICLE_ENGINE_ON(allVehicles[i]) 
-					|| vehicle2cam_distance > MAX_PED_TO_CAM_DISTANCE) {
+				if (!ENTITY::IS_ENTITY_ON_SCREEN(allVehicles[i])  || !ENTITY::HAS_ENTITY_CLEAR_LOS_TO_ENTITY(PLAYER::GET_PLAYER_PED(-1),
+					allVehicles[i], 17) || !ENTITY::IS_ENTITY_VISIBLE(allVehicles[i])  || !VEHICLE::_IS_VEHICLE_ENGINE_ON(allVehicles[i]) 
+					|| vehicle2cam_distance > this->maxVehicleDistance) {
 
 					//log_file << "veicolo non inquadrato o occluso o spento\n";
 					continue;
 				}
 
-				// save also the corresponding class for COCO dataset (car = 3, truck = 8)
+				vehicleIsPresent = true;
+				// save also the corresponding class for COCO dataset (car = 2, truck = 7)
 				int vehicleClass = VEHICLE::GET_VEHICLE_CLASS(allVehicles[i]);
 				log_file << "Cam ID: " << camId << " Frame #: " << frameCount << " vehicle gta class: " << vehicleClass << std::endl;
 				if (cars.find(vehicleClass) != cars.end()) {
@@ -4936,7 +4961,20 @@ void Creator::RECORD() {
 				//log_file << "Frame Count = " << frameCount << " cam number = " << camId << " bb_x_max : " << boundingBox.x_max << " bb_x_min : " << boundingBox.x_min << std::endl;
 			}
 			
-			
+			if (!vehicleIsPresent) {
+				BoundingBox boundingBox;
+				boundingBox.x_max = 0;
+				boundingBox.x_min = (float)SCREEN_WIDTH;
+				boundingBox.y_max = 0;
+				boundingBox.y_min = (float)SCREEN_HEIGHT;
+				Vector3 v;
+				v.x = 0;
+				v.y = 0;
+				v.z = 0;
+
+				std::vector<std::string> vehicleInfoEntry = logVehicleBoundingBox(frameCount, frameTime, 0, boundingBox, v, vehicleCocoClass);
+				mapVehiclesInfos[camId].push_back(vehicleInfoEntry);
+			}
 			//appendCSVLinesToFile(camCoordsFiles[camId], jointVehicleInfos);
 			saveScreenImage(pathImage);
 			//WAIT(0);
