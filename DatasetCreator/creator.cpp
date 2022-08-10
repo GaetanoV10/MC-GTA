@@ -4972,7 +4972,7 @@ void Creator::RECORD() {
 				v.y = 0;
 				v.z = 0;
 
-				std::vector<std::string> vehicleInfoEntry = logVehicleBoundingBox(frameCount, frameTime, 0, boundingBox, v, vehicleCocoClass);
+				std::vector<std::string> vehicleInfoEntry = logVehicleBoundingBox(frameCount, frameTime, 0, boundingBox, v, -1);
 				mapVehiclesInfos[camId].push_back(vehicleInfoEntry);
 			}
 			//appendCSVLinesToFile(camCoordsFiles[camId], jointVehicleInfos);
@@ -4995,6 +4995,20 @@ void Creator::RECORD() {
 	}
 	closeCamCoordFiles();
 	resetPlayerCam();
+
+	std::ofstream camDistFile;
+	camDistFile.open(output_path + "\\cam_dist.txt");
+	for (int camId = 0; camId < cameraSettings.size(); camId++) {
+		camDistFile << "Camera #: " << camId << "#####################################" << std::endl;
+
+		for (int camId2 = 0; camId2 < cameraSettings.size(); camId2++) {
+			float cam_2_cam_distance = GAMEPLAY::GET_DISTANCE_BETWEEN_COORDS(
+				cameraSettings[camId].position.x, cameraSettings[camId].position.y, cameraSettings[camId].position.z,
+				cameraSettings[camId2].position.x, cameraSettings[camId2].position.y, cameraSettings[camId2].position.z, 1);
+			camDistFile << "Camera #: " << camId << " to camera #: " << camId2 << " with distance: " << cam_2_cam_distance << std::endl;
+		}
+	}
+	camDistFile.close();
 
 }
 
