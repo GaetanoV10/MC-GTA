@@ -1697,6 +1697,8 @@ private:
 	const std::string is_debug_param_name_ = "is_debug";
 	const std::string iteration_ = "iteration";
 	const std::string max_vehicle_distance_ = "max_distance";
+	const std::string register_night_ = "night_register";
+	const std::string weather_condition_ = "weather_condition";
 
 
 	std::string output_path;
@@ -1762,6 +1764,8 @@ private:
 	int fpsPerCam;
 	int iterations;
 	int maxVehicleDistance;
+	bool registerNight;
+	std::string weatherCondition;
 	float currTimeScale = 1.0f;
 	
 	HWND hWnd;

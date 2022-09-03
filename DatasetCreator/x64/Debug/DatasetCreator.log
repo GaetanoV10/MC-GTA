@@ -7,17 +7,17 @@ C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.h(9
 C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.h(994,27): warning C4244: 'inizializzazione': conversione da 'double' a 'float'. Possibile perdita di dati.
 C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.h(1439,18): warning C4244: '=': conversione da 'float' a 'int'. Possibile perdita di dati.
   The contents of <filesystem> are available only with C++17 or later.
-C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(1584,19): warning C4244: 'inizializzazione': conversione da 'Any' a 'float'. Possibile perdita di dati.
-C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(2047,16): warning C4244: 'inizializzazione': conversione da 'double' a 'float'. Possibile perdita di dati.
-C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(2360,16): warning C4244: 'inizializzazione': conversione da 'double' a 'float'. Possibile perdita di dati.
-C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(2383,16): warning C4244: 'inizializzazione': conversione da 'double' a 'float'. Possibile perdita di dati.
-C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(2961,45): warning C4267: '=': conversione da 'size_t' a 'int'. Possibile perdita di dati.
-C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(4190,14): warning C4244: 'inizializzazione': conversione da 'double' a 'float'. Possibile perdita di dati.
-C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(4725,30): warning C4305: 'argomento': troncamento da 'double' a 'float'
-C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(4744,18): warning C4244: 'inizializzazione': conversione da 'Any' a 'float'. Possibile perdita di dati.
-C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(4821,105): warning C4244: 'argomento': conversione da 'Any' a 'float'. Possibile perdita di dati.
-C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(4874,137): warning C4244: 'argomento': conversione da 'double' a 'float'. Possibile perdita di dati.
-C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(4883,20): warning C4244: 'inizializzazione': conversione da 'Any' a 'float'. Possibile perdita di dati.
+C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(1588,19): warning C4244: 'inizializzazione': conversione da 'Any' a 'float'. Possibile perdita di dati.
+C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(2051,16): warning C4244: 'inizializzazione': conversione da 'double' a 'float'. Possibile perdita di dati.
+C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(2364,16): warning C4244: 'inizializzazione': conversione da 'double' a 'float'. Possibile perdita di dati.
+C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(2387,16): warning C4244: 'inizializzazione': conversione da 'double' a 'float'. Possibile perdita di dati.
+C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(2965,45): warning C4267: '=': conversione da 'size_t' a 'int'. Possibile perdita di dati.
+C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(4194,14): warning C4244: 'inizializzazione': conversione da 'double' a 'float'. Possibile perdita di dati.
+C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(4729,30): warning C4305: 'argomento': troncamento da 'double' a 'float'
+C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(4748,18): warning C4244: 'inizializzazione': conversione da 'Any' a 'float'. Possibile perdita di dati.
+C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(4825,105): warning C4244: 'argomento': conversione da 'Any' a 'float'. Possibile perdita di dati.
+C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(4891,137): warning C4244: 'argomento': conversione da 'double' a 'float'. Possibile perdita di dati.
+C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(4900,20): warning C4244: 'inizializzazione': conversione da 'Any' a 'float'. Possibile perdita di dati.
 C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(5029,14): warning C4244: '=': conversione da 'double' a 'float'. Possibile perdita di dati.
 C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(5030,14): warning C4244: '=': conversione da 'double' a 'float'. Possibile perdita di dati.
 C:\Users\tanuz\Desktop\TESI MAGISTRALE\GT5_Vehicle_BB\DatasetCreator\creator.cpp(5031,14): warning C4244: '=': conversione da 'double' a 'float'. Possibile perdita di dati.

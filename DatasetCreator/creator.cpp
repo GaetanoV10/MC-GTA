@@ -267,6 +267,8 @@ void Creator::registerParams() {
 	int_params_.registerParam(this->fps_per_cam_param_name_);
 	int_params_.registerParam(this->iteration_);
 	int_params_.registerParam(this->max_vehicle_distance_);
+	bool_params_.registerParam(this->register_night_);
+	string_params_.registerParam(this->weather_condition_);
 }
 
 
@@ -285,6 +287,8 @@ bool_params_(config_file) {
 	this->fpsPerCam = int_params_.getParam(this->fps_per_cam_param_name_);
 	this->iterations = int_params_.getParam(this->iteration_);
 	this->maxVehicleDistance = int_params_.getParam(this->max_vehicle_distance_);
+	this->registerNight = bool_params_.getParam(this->register_night_);
+	this->weatherCondition = string_params_.getParam(this->weather_condition_);
 
 
 
@@ -4835,6 +4839,13 @@ void Creator::drawVehicle2dBoundingBox() {
 void Creator::RECORD() {
 
 	//TIME::SET_CLOCK_TIME(10, 0, 0);
+	// set weather if configuration variable is not empty
+	if (!this->weatherCondition.empty()) {
+		GAMEPLAY::CLEAR_OVERRIDE_WEATHER();
+		GAMEPLAY::SET_WEATHER_TYPE_NOW_PERSIST(&this->weatherCondition[0]);
+		GAMEPLAY::CLEAR_WEATHER_TYPE_PERSIST();
+	}
+	log_file << "Weather: " << &this->weatherCondition[0] << " setted!" << std::endl;
 	std::map<int, std::vector<std::vector<std::string>>> mapVehiclesInfos;
 
 	// Slow motion in game accordingly to frame rate at which record!
@@ -4860,11 +4871,17 @@ void Creator::RECORD() {
 
 	int timeToWait = this->iterations;
 	while (timeToWait > 0) {
-
-		if (TIME::GET_CLOCK_HOURS() > 15) {
+		
+		// register over night hours or sun hours
+		if (registerNight && (TIME::GET_CLOCK_HOURS() < 20 || TIME::GET_CLOCK_HOURS() > 22)) {
+			int m = TIME::GET_CLOCK_MINUTES();
+			TIME::SET_CLOCK_TIME(20, m, 0);
+		
+		} else if (!registerNight && TIME::GET_CLOCK_HOURS() > 15) {
 			int m = TIME::GET_CLOCK_MINUTES();
 			TIME::SET_CLOCK_TIME(9, m, 0);
 		}
+		log_file << "Register at time: " << TIME::GET_CLOCK_HOURS() << std::endl;
 
 		for (int camId = 0; camId < cameraSettings.size(); camId++) {
 
@@ -4897,7 +4914,6 @@ void Creator::RECORD() {
 			//std::vector<std::vector<std::string>> jointVehicleInfos;
 
 			int vehicleCocoClass;
-			boolean vehicleIsPresent = false;
 			for (int i = 0; i < foundWorldVehicles; i++) {
 
 				Vector3 vehicle_coords = ENTITY::GET_ENTITY_COORDS(allVehicles[i], TRUE);
@@ -4913,7 +4929,6 @@ void Creator::RECORD() {
 					continue;
 				}
 
-				vehicleIsPresent = true;
 				// save also the corresponding class for COCO dataset (car = 2, truck = 7)
 				int vehicleClass = VEHICLE::GET_VEHICLE_CLASS(allVehicles[i]);
 				log_file << "Cam ID: " << camId << " Frame #: " << frameCount << " vehicle gta class: " << vehicleClass << std::endl;
@@ -4959,21 +4974,6 @@ void Creator::RECORD() {
 					, (int)boundingBox.x_max
 					, (int)boundingBox.y_max, 2.0f);*/
 				//log_file << "Frame Count = " << frameCount << " cam number = " << camId << " bb_x_max : " << boundingBox.x_max << " bb_x_min : " << boundingBox.x_min << std::endl;
-			}
-			
-			if (!vehicleIsPresent) {
-				BoundingBox boundingBox;
-				boundingBox.x_max = 0;
-				boundingBox.x_min = (float)SCREEN_WIDTH;
-				boundingBox.y_max = 0;
-				boundingBox.y_min = (float)SCREEN_HEIGHT;
-				Vector3 v;
-				v.x = 0;
-				v.y = 0;
-				v.z = 0;
-
-				std::vector<std::string> vehicleInfoEntry = logVehicleBoundingBox(frameCount, frameTime, 0, boundingBox, v, -1);
-				mapVehiclesInfos[camId].push_back(vehicleInfoEntry);
 			}
 			//appendCSVLinesToFile(camCoordsFiles[camId], jointVehicleInfos);
 			saveScreenImage(pathImage);

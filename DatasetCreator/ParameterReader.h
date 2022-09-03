@@ -70,13 +70,12 @@ private:
 	}
 
 	// needed for bools
-	//template<>
-	//bool convertKey<bool>(const std::string& key) const {
-	//	std::stringstream converter(key);
-		//bool value;
-		//converter >> std::boolalpha >> value;
-		//return value;
-	//}
+	template<>
+	bool convertKey<bool>(const std::string& key) const {
+		return !key.empty() &&
+			(stricmp(key.c_str(), "true") == 0 ||
+				atoi(key.c_str()) != 0);
+	}
 
 
 
