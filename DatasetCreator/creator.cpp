@@ -3514,7 +3514,7 @@ void Creator::main_menu()
 		sprintf_s(lines[0], "Show Camera view	~y~[ %d ]", viewCameraIndex);
 		sprintf_s(lines[4], "Ped Walking Scene	~y~[ %s ]", std::to_string(isWalkingSceneRunning).c_str());
 		sprintf_s(lines[8], "Ped visibility	~y~[ %s ]", std::to_string(arePedsVisible).c_str());
-		sprintf_s(lines[14], "Draw Ped 2d Box	~y~[ %s ]", std::to_string(shouldDrawPed2dBox).c_str());
+		sprintf_s(lines[14], "Draw Vehicles 2d BBs	~y~[ %s ]", std::to_string(shouldDrawPed2dBox).c_str());
 
 		do
 		{
