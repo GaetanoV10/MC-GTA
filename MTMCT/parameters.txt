@@ -1,6 +1,11 @@
-screen_width:2560
-screen_height:1440
+screen_width:1920
+screen_height:1080
 wait_ms_after_set_camera:100
-time_scale:0.1f
-fps_per_cam:41
+time_scale:0.25f
+fps_per_cam:30
 is_debug:false
+iteration:10
+max_distance:100
+night_register:true
+weather_condition:EXTRASUNNY  
+(example: "CLEAR","EXTRASUNNY","RAIN","THUNDER","CLOUDS","SMOG","FOGGY")

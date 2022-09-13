@@ -1,0 +1,42 @@
+Camera #: 0#####################################
+Camera #: 0 to camera #: 0 with distance: 0
+Camera #: 0 to camera #: 1 with distance: 133.979
+Camera #: 0 to camera #: 2 with distance: 207.23
+Camera #: 0 to camera #: 3 with distance: 37.7506
+Camera #: 0 to camera #: 4 with distance: 175.051
+Camera #: 0 to camera #: 5 with distance: 161.129
+Camera #: 1#####################################
+Camera #: 1 to camera #: 0 with distance: 133.979
+Camera #: 1 to camera #: 1 with distance: 0
+Camera #: 1 to camera #: 2 with distance: 334.973
+Camera #: 1 to camera #: 3 with distance: 143.28
+Camera #: 1 to camera #: 4 with distance: 301.935
+Camera #: 1 to camera #: 5 with distance: 44.1475
+Camera #: 2#####################################
+Camera #: 2 to camera #: 0 with distance: 207.23
+Camera #: 2 to camera #: 1 with distance: 334.973
+Camera #: 2 to camera #: 2 with distance: 0
+Camera #: 2 to camera #: 3 with distance: 192.018
+Camera #: 2 to camera #: 4 with distance: 33.4684
+Camera #: 2 to camera #: 5 with distance: 367.258
+Camera #: 3#####################################
+Camera #: 3 to camera #: 0 with distance: 37.7506
+Camera #: 3 to camera #: 1 with distance: 143.28
+Camera #: 3 to camera #: 2 with distance: 192.018
+Camera #: 3 to camera #: 3 with distance: 0
+Camera #: 3 to camera #: 4 with distance: 158.814
+Camera #: 3 to camera #: 5 with distance: 177.656
+Camera #: 4#####################################
+Camera #: 4 to camera #: 0 with distance: 175.051
+Camera #: 4 to camera #: 1 with distance: 301.935
+Camera #: 4 to camera #: 2 with distance: 33.4684
+Camera #: 4 to camera #: 3 with distance: 158.814
+Camera #: 4 to camera #: 4 with distance: 0
+Camera #: 4 to camera #: 5 with distance: 334.573
+Camera #: 5#####################################
+Camera #: 5 to camera #: 0 with distance: 161.129
+Camera #: 5 to camera #: 1 with distance: 44.1475
+Camera #: 5 to camera #: 2 with distance: 367.258
+Camera #: 5 to camera #: 3 with distance: 177.656
+Camera #: 5 to camera #: 4 with distance: 334.573
+Camera #: 5 to camera #: 5 with distance: 0
