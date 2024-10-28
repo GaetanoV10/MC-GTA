@@ -21,7 +21,8 @@ This is a modified version of a GTA-V mod tool, _DatasetCreator.asi_ (originally
 ## Contacts
 - Luca Ciampi - luca.ciampi@isti.cnr.it
 - Nicola Messina - nicola.messina@isti.cnr.it
-- Gaetano Emanuele Valenti - g.valenti10@studenti.unipi.it
+- Gaetano Emanuele Valenti -
+gaetano.valenti@intecs.it
 
 ## Acknowledgements
 The basis of the developed code is from https://github.com/koehlp/MTA-Mod
